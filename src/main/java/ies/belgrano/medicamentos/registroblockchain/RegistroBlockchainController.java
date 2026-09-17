@@ -1,4 +1,4 @@
-package com.medichain.ciudadania.reporteciudadano;
+package ies.belgrano.medicamentos.registroblockchain;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,16 +16,16 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/reportes-ciudadanos")
-public class ReporteCiudadanoController {
+@RequestMapping("/api/registros-blockchain")
+public class RegistroBlockchainController {
 
     @Autowired
-    private ReporteCiudadanoService service;
+    private RegistroBlockchainService service;
 
     @PostMapping
-    public ResponseEntity<ReporteCiudadano> create(@RequestBody ReporteCiudadano entidad) {
+    public ResponseEntity<RegistroBlockchain> create(@RequestBody RegistroBlockchain entidad) {
         try {
-            ReporteCiudadano nuevo = service.create(entidad);
+            RegistroBlockchain nuevo = service.create(entidad);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -33,8 +33,8 @@ public class ReporteCiudadanoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ReporteCiudadano>> getAll() {
-        List<ReporteCiudadano> lista = service.getAll();
+    public ResponseEntity<List<RegistroBlockchain>> getAll() {
+        List<RegistroBlockchain> lista = service.getAll();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -42,8 +42,8 @@ public class ReporteCiudadanoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReporteCiudadano> getById(@PathVariable UUID id) {
-        ReporteCiudadano entidad = service.getById(id);
+    public ResponseEntity<RegistroBlockchain> getById(@PathVariable UUID id) {
+        RegistroBlockchain entidad = service.getById(id);
         if (entidad == null) {
             return ResponseEntity.notFound().build();
         }
@@ -51,9 +51,9 @@ public class ReporteCiudadanoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReporteCiudadano> update(@PathVariable UUID id, @RequestBody ReporteCiudadano entidad) {
+    public ResponseEntity<RegistroBlockchain> update(@PathVariable UUID id, @RequestBody RegistroBlockchain entidad) {
         try {
-            ReporteCiudadano actualizado = service.update(id, entidad);
+            RegistroBlockchain actualizado = service.update(id, entidad);
             if (actualizado == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -65,7 +65,7 @@ public class ReporteCiudadanoController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        ReporteCiudadano entidad = service.getById(id);
+        RegistroBlockchain entidad = service.getById(id);
         if (entidad == null) {
             return ResponseEntity.notFound().build();
         }

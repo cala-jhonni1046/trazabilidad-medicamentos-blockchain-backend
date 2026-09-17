@@ -1,4 +1,4 @@
-package com.medichain.blockchain.registroblockchain;
+package ies.belgrano.medicamentos.dispensacion;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,16 +16,16 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/registros-blockchain")
-public class RegistroBlockchainController {
+@RequestMapping("/api/dispensaciones")
+public class DispensacionController {
 
     @Autowired
-    private RegistroBlockchainService service;
+    private DispensacionService service;
 
     @PostMapping
-    public ResponseEntity<RegistroBlockchain> create(@RequestBody RegistroBlockchain entidad) {
+    public ResponseEntity<Dispensacion> create(@RequestBody Dispensacion entidad) {
         try {
-            RegistroBlockchain nuevo = service.create(entidad);
+            Dispensacion nuevo = service.create(entidad);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -33,8 +33,8 @@ public class RegistroBlockchainController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RegistroBlockchain>> getAll() {
-        List<RegistroBlockchain> lista = service.getAll();
+    public ResponseEntity<List<Dispensacion>> getAll() {
+        List<Dispensacion> lista = service.getAll();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -42,8 +42,8 @@ public class RegistroBlockchainController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RegistroBlockchain> getById(@PathVariable UUID id) {
-        RegistroBlockchain entidad = service.getById(id);
+    public ResponseEntity<Dispensacion> getById(@PathVariable UUID id) {
+        Dispensacion entidad = service.getById(id);
         if (entidad == null) {
             return ResponseEntity.notFound().build();
         }
@@ -51,9 +51,9 @@ public class RegistroBlockchainController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RegistroBlockchain> update(@PathVariable UUID id, @RequestBody RegistroBlockchain entidad) {
+    public ResponseEntity<Dispensacion> update(@PathVariable UUID id, @RequestBody Dispensacion entidad) {
         try {
-            RegistroBlockchain actualizado = service.update(id, entidad);
+            Dispensacion actualizado = service.update(id, entidad);
             if (actualizado == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -65,7 +65,7 @@ public class RegistroBlockchainController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        RegistroBlockchain entidad = service.getById(id);
+        Dispensacion entidad = service.getById(id);
         if (entidad == null) {
             return ResponseEntity.notFound().build();
         }

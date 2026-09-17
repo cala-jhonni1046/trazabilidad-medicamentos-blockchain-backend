@@ -1,4 +1,4 @@
-package com.medichain.operaciones.dispensacion;
+package ies.belgrano.medicamentos.reporteciudadano;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface DispensacionRepository extends JpaRepository<Dispensacion, UUID> {
+public interface ReporteCiudadanoRepository extends JpaRepository<ReporteCiudadano, UUID> {
 }

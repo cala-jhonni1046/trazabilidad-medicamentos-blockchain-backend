@@ -1,4 +1,4 @@
-package com.medichain.blockchain.registroblockchain;
+package ies.belgrano.medicamentos.registroblockchain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

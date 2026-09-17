@@ -1,4 +1,4 @@
-package com.medichain.operaciones.dispensacion;
+package ies.belgrano.medicamentos.reporteciudadano;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,16 +16,16 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/dispensaciones")
-public class DispensacionController {
+@RequestMapping("/api/reportes-ciudadanos")
+public class ReporteCiudadanoController {
 
     @Autowired
-    private DispensacionService service;
+    private ReporteCiudadanoService service;
 
     @PostMapping
-    public ResponseEntity<Dispensacion> create(@RequestBody Dispensacion entidad) {
+    public ResponseEntity<ReporteCiudadano> create(@RequestBody ReporteCiudadano entidad) {
         try {
-            Dispensacion nuevo = service.create(entidad);
+            ReporteCiudadano nuevo = service.create(entidad);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -33,8 +33,8 @@ public class DispensacionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Dispensacion>> getAll() {
-        List<Dispensacion> lista = service.getAll();
+    public ResponseEntity<List<ReporteCiudadano>> getAll() {
+        List<ReporteCiudadano> lista = service.getAll();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -42,8 +42,8 @@ public class DispensacionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Dispensacion> getById(@PathVariable UUID id) {
-        Dispensacion entidad = service.getById(id);
+    public ResponseEntity<ReporteCiudadano> getById(@PathVariable UUID id) {
+        ReporteCiudadano entidad = service.getById(id);
         if (entidad == null) {
             return ResponseEntity.notFound().build();
         }
@@ -51,9 +51,9 @@ public class DispensacionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Dispensacion> update(@PathVariable UUID id, @RequestBody Dispensacion entidad) {
+    public ResponseEntity<ReporteCiudadano> update(@PathVariable UUID id, @RequestBody ReporteCiudadano entidad) {
         try {
-            Dispensacion actualizado = service.update(id, entidad);
+            ReporteCiudadano actualizado = service.update(id, entidad);
             if (actualizado == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -65,7 +65,7 @@ public class DispensacionController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        Dispensacion entidad = service.getById(id);
+        ReporteCiudadano entidad = service.getById(id);
         if (entidad == null) {
             return ResponseEntity.notFound().build();
         }

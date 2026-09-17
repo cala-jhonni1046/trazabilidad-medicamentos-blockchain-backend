@@ -1,4 +1,4 @@
-package com.medichain.ciudadania.reporteciudadano;
+package ies.belgrano.medicamentos.reporteciudadano;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

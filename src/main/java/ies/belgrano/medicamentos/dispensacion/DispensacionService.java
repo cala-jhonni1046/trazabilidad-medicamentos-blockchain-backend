@@ -1,4 +1,4 @@
-package com.medichain.blockchain.registroblockchain;
+package ies.belgrano.medicamentos.dispensacion;
 
 import java.util.List;
 import java.util.UUID;
@@ -7,25 +7,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RegistroBlockchainService {
+public class DispensacionService {
 
     @Autowired
-    private RegistroBlockchainRepository repo;
+    private DispensacionRepository repo;
 
-    public List<RegistroBlockchain> getAll() {
+    public List<Dispensacion> getAll() {
         return repo.findAll();
     }
 
-    public RegistroBlockchain getById(UUID id) {
+    public Dispensacion getById(UUID id) {
         return repo.findById(id).orElse(null);
     }
 
-    public RegistroBlockchain create(RegistroBlockchain entidad) {
+    public Dispensacion create(Dispensacion entidad) {
         return repo.save(entidad);
     }
 
-    public RegistroBlockchain update(UUID id, RegistroBlockchain entidad) {
-        RegistroBlockchain existente = this.getById(id);
+    public Dispensacion update(UUID id, Dispensacion entidad) {
+        Dispensacion existente = this.getById(id);
         if (existente == null) {
             return null;
         } else {

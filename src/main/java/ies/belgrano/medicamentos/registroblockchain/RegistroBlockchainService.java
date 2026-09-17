@@ -1,4 +1,4 @@
-package com.medichain.logistics.telemetriagps;
+package ies.belgrano.medicamentos.registroblockchain;
 
 import java.util.List;
 import java.util.UUID;
@@ -7,25 +7,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TelemetriaGPSService {
+public class RegistroBlockchainService {
 
     @Autowired
-    private TelemetriaGPSRepository repo;
+    private RegistroBlockchainRepository repo;
 
-    public List<TelemetriaGPS> getAll() {
+    public List<RegistroBlockchain> getAll() {
         return repo.findAll();
     }
 
-    public TelemetriaGPS getById(UUID id) {
+    public RegistroBlockchain getById(UUID id) {
         return repo.findById(id).orElse(null);
     }
 
-    public TelemetriaGPS create(TelemetriaGPS entidad) {
+    public RegistroBlockchain create(RegistroBlockchain entidad) {
         return repo.save(entidad);
     }
 
-    public TelemetriaGPS update(UUID id, TelemetriaGPS entidad) {
-        TelemetriaGPS existente = this.getById(id);
+    public RegistroBlockchain update(UUID id, RegistroBlockchain entidad) {
+        RegistroBlockchain existente = this.getById(id);
         if (existente == null) {
             return null;
         } else {

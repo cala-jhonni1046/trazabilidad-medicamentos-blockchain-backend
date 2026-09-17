@@ -1,4 +1,4 @@
-package com.medichain.blockchain.registroblockchain;
+package ies.belgrano.medicamentos.dispensacion;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface RegistroBlockchainRepository extends JpaRepository<RegistroBlockchain, UUID> {
+public interface DispensacionRepository extends JpaRepository<Dispensacion, UUID> {
 }

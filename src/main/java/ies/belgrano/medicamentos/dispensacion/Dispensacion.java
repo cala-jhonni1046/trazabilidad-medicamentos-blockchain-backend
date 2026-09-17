@@ -1,4 +1,4 @@
-package com.medichain.operaciones.dispensacion;
+package ies.belgrano.medicamentos.dispensacion;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
