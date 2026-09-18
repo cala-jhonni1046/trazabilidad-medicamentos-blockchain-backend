@@ -3,6 +3,7 @@ package ies.belgrano.medicamentos.usuario;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,79 +11,82 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
+@RequestMapping("/api/usuarios")
 public class UsuarioController {
 	
 	@Autowired
 	private UsuarioService service;
+
+	@Autowired
+	private UsuarioMapper mapper;
 	
-	    // Recuperar todas
-		@GetMapping("/usuarios")
-		public ResponseEntity<List<Usuario>> buscarUsuario(){
-			
-			List<Usuario> listaUsuario = service.getAll();
-			
-			if (listaUsuario.isEmpty()) {
-				return ResponseEntity.noContent().build();
-			} else {
-				return ResponseEntity.ok(listaUsuario);
-			}
-			
-		}
+	@GetMapping
+	public ResponseEntity<List<UsuarioResponseDTO>> getAll() {
+		List<Usuario> usuarios = service.getAll();
 		
-		// Recuperar una sola
-		@GetMapping("/usuarios/{id}")
-		public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id) {
-			
-			Usuario usuario = service.getById(id);
-			if (usuario == null) {
-				return ResponseEntity.notFound().build();
-			} else {
-				return ResponseEntity.ok(usuario);
-			}
+		if (usuarios.isEmpty()) {
+			return ResponseEntity.noContent().build();
+		} else {
+			List<UsuarioResponseDTO> dtoList = usuarios.stream()
+					.map(mapper::toResponseDTO)
+					.toList();
+			return ResponseEntity.ok(dtoList);
 		}
-		
-		// Crear nuevo usuario
-		@PostMapping("/usuarios")
-		public ResponseEntity<Usuario> crearNuevoUsuario(@RequestBody Usuario usuario) {
+	}
+	
+	@GetMapping("/{id}")
+	public ResponseEntity<UsuarioResponseDTO> getById(@PathVariable Long id) {
+		Usuario usuario = service.getById(id);
+		if (usuario == null) {
+			return ResponseEntity.notFound().build();
+		} else {
+			return ResponseEntity.ok(mapper.toResponseDTO(usuario));
+		}
+	}
+	
+	@PostMapping
+	public ResponseEntity<UsuarioResponseDTO> create(@RequestBody UsuarioRequestDTO requestDTO) {
+		try {
+			Usuario entity = mapper.toEntity(requestDTO);
+			Usuario usuarioCreado = service.create(entity);
+			return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(usuarioCreado));
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().build();
+		}
+	}
+	
+	@PutMapping("/{id}")
+	public ResponseEntity<UsuarioResponseDTO> update(@PathVariable Long id, @RequestBody UsuarioRequestDTO requestDTO) {
+		Usuario usuarioExistente = service.getById(id);
+		if (usuarioExistente == null) {
+			return ResponseEntity.notFound().build();
+		} else {
 			try {
-				Usuario usuarioCreado = service.create(usuario);
-				return ResponseEntity.ok(usuarioCreado);
-			}catch(Exception e) {
+				Usuario entity = mapper.toEntity(requestDTO);
+				Usuario usuarioActualizado = service.update(id, entity);
+				return ResponseEntity.ok(mapper.toResponseDTO(usuarioActualizado));
+			} catch (Exception e) {
 				return ResponseEntity.badRequest().build();
 			}
 		}
-		
-		// Actualizar usuario
-		@PutMapping("/usuarios/{id}")
-		public ResponseEntity<Usuario> actualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuario) {
-			Usuario usuarioDesdeServicio = service.getById(id);
-			if (usuarioDesdeServicio == null) {
-				return ResponseEntity.notFound().build();
-			} else {
-				try {
-					Usuario usuarioActualizado = service.update(usuario, id);
-					return ResponseEntity.ok(usuarioActualizado);
-				}catch(Exception e) {
-					return ResponseEntity.badRequest().build();
-				}
-			}
-		}
-		
-		// Eliminar usuario
-		@DeleteMapping("/usuarios/{id}")
-		public ResponseEntity<?> borrarUsuarioPorId(@PathVariable Long id) {
-			
-			Usuario usuario = service.getById(id);
-			if (usuario == null) {
-				return ResponseEntity.notFound().build();
-			} else {
+	}
+	
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> delete(@PathVariable Long id) {
+		Usuario usuario = service.getById(id);
+		if (usuario == null) {
+			return ResponseEntity.notFound().build();
+		} else {
+			try {
 				service.delete(id);
-				return ResponseEntity.ok().build();
+				return ResponseEntity.noContent().build();
+			} catch (Exception e) {
+				return ResponseEntity.badRequest().build();
 			}
 		}
-
+	}
 }
