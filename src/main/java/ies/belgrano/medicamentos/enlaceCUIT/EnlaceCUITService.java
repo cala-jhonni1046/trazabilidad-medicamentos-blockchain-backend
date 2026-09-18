@@ -3,9 +3,9 @@ package ies.belgrano.medicamentos.enlaceCUIT;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-
-
+@Service
 public class EnlaceCUITService {
 	
 	@Autowired
@@ -24,7 +24,7 @@ public class EnlaceCUITService {
 		return repo.save(enlaceCUIT);
 	}
 	
-	public EnlaceCUIT update(EnlaceCUIT enlaceCUIT, Long id) {
+	public EnlaceCUIT update(Long id, EnlaceCUIT enlaceCUIT) {
 		EnlaceCUIT actualizarEnlaceCUIT = this.getById(id);
 		if(actualizarEnlaceCUIT == null) {
 			return null;

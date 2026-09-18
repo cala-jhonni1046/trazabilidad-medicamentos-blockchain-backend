@@ -27,7 +27,7 @@ public class InspectorANMATService {
 		return repo.save(inspectorANMAT);
 	}
 	
-	public InspectorANMAT update(InspectorANMAT inspectorANMAT, Long id) {
+	public InspectorANMAT update(Long id, InspectorANMAT inspectorANMAT) {
 		InspectorANMAT actualizarInspectorANMAT = this.getById(id);
 		if(actualizarInspectorANMAT == null) {
 			return null;
