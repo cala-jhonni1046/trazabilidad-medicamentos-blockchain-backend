@@ -24,7 +24,7 @@ public class UsuarioService {
 		return repo.save(usuario);
 	}
 	
-	public Usuario update(Usuario usuario, Long id) {
+	public Usuario update(Long id, Usuario usuario) {
 		Usuario actualizarUsuario = this.getById(id);
 		if(actualizarUsuario == null) {
 			return null;
