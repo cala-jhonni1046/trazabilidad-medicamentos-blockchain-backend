@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/reportes-ciudadanos")
@@ -22,19 +21,14 @@ public class ReporteCiudadanoController {
     @Autowired
     private ReporteCiudadanoService service;
 
-    @PostMapping
-    public ResponseEntity<ReporteCiudadano> create(@RequestBody ReporteCiudadano entidad) {
-        try {
-            ReporteCiudadano nuevo = service.create(entidad);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    @Autowired
+    private ReporteCiudadanoMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<ReporteCiudadano>> getAll() {
-        List<ReporteCiudadano> lista = service.getAll();
+    public ResponseEntity<List<ReporteCiudadanoResponseDTO>> getAll() {
+        List<ReporteCiudadanoResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -42,31 +36,41 @@ public class ReporteCiudadanoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReporteCiudadano> getById(@PathVariable UUID id) {
-        ReporteCiudadano entidad = service.getById(id);
-        if (entidad == null) {
+    public ResponseEntity<ReporteCiudadanoResponseDTO> getById(@PathVariable Long id) {
+        ReporteCiudadano reporte = service.getById(id);
+        if (reporte == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(entidad);
+        return ResponseEntity.ok(mapper.toResponseDTO(reporte));
+    }
+
+    @PostMapping
+    public ResponseEntity<ReporteCiudadanoResponseDTO> create(@RequestBody ReporteCiudadanoRequestDTO dto) {
+        try {
+            ReporteCiudadano nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReporteCiudadano> update(@PathVariable UUID id, @RequestBody ReporteCiudadano entidad) {
+    public ResponseEntity<ReporteCiudadanoResponseDTO> update(@PathVariable Long id, @RequestBody ReporteCiudadanoRequestDTO dto) {
         try {
-            ReporteCiudadano actualizado = service.update(id, entidad);
+            ReporteCiudadano actualizado = service.update(id, mapper.toEntity(dto));
             if (actualizado == null) {
                 return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(actualizado);
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        ReporteCiudadano entidad = service.getById(id);
-        if (entidad == null) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        ReporteCiudadano reporte = service.getById(id);
+        if (reporte == null) {
             return ResponseEntity.notFound().build();
         }
         service.delete(id);

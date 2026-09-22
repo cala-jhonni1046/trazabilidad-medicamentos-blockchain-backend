@@ -1,7 +1,6 @@
 package ies.belgrano.medicamentos.reporteciudadano;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,25 +15,25 @@ public class ReporteCiudadanoService {
         return repo.findAll();
     }
 
-    public ReporteCiudadano getById(UUID id) {
+    public ReporteCiudadano getById(Long id) {
         return repo.findById(id).orElse(null);
     }
 
-    public ReporteCiudadano create(ReporteCiudadano entidad) {
-        return repo.save(entidad);
+    public ReporteCiudadano create(ReporteCiudadano reporte) {
+        return repo.save(reporte);
     }
 
-    public ReporteCiudadano update(UUID id, ReporteCiudadano entidad) {
+    public ReporteCiudadano update(Long id, ReporteCiudadano reporte) {
         ReporteCiudadano existente = this.getById(id);
         if (existente == null) {
             return null;
         } else {
-            entidad.setId(id);
-            return repo.save(entidad);
+            reporte.setId(id);
+            return repo.save(reporte);
         }
     }
 
-    public void delete(UUID id) {
+    public void delete(Long id) {
         repo.deleteById(id);
     }
 }

@@ -1,49 +1,38 @@
 package ies.belgrano.medicamentos.blockchain.registroblockchain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
 
-import ies.belgrano.medicamentos.inspector.InspectorANMAT;
-import ies.belgrano.medicamentos.lote.Lote;
-import ies.belgrano.medicamentos.utils.BaseEntity;
+public class RegistroBlockchainResponseDTO {
 
-@Entity
-@Table(name = "registros_blockchain")
-public class RegistroBlockchain extends BaseEntity {
-
+    private Long id;
     private String transactionHash;
-
     private Long bloque;
-
     private String firmaInspectorANMAT;
-
     private LocalDateTime timestamp;
-
     private Boolean confirmado;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
-    @ManyToOne
-    @JoinColumn(name = "lote_id", nullable = true)
-    private Lote lote;
-
-    @ManyToOne
-    @JoinColumn(name = "inspector_id", nullable = true)
-    private InspectorANMAT inspector;
-
-    public RegistroBlockchain() {
+    public RegistroBlockchainResponseDTO() {
     }
 
-    public RegistroBlockchain(String transactionHash, Long bloque, String firmaInspectorANMAT, LocalDateTime timestamp, Boolean confirmado, Lote lote, InspectorANMAT inspector) {
+    public RegistroBlockchainResponseDTO(Long id, String transactionHash, Long bloque, String firmaInspectorANMAT, LocalDateTime timestamp, Boolean confirmado, LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
+        this.id = id;
         this.transactionHash = transactionHash;
         this.bloque = bloque;
         this.firmaInspectorANMAT = firmaInspectorANMAT;
         this.timestamp = timestamp;
         this.confirmado = confirmado;
-        this.lote = lote;
-        this.inspector = inspector;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTransactionHash() {
@@ -86,19 +75,19 @@ public class RegistroBlockchain extends BaseEntity {
         this.confirmado = confirmado;
     }
 
-    public Lote getLote() {
-        return lote;
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
     }
 
-    public void setLote(Lote lote) {
-        this.lote = lote;
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 
-    public InspectorANMAT getInspector() {
-        return inspector;
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
     }
 
-    public void setInspector(InspectorANMAT inspector) {
-        this.inspector = inspector;
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
     }
 }
