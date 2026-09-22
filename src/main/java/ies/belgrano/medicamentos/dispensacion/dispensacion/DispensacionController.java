@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/dispensaciones")
@@ -22,19 +21,14 @@ public class DispensacionController {
     @Autowired
     private DispensacionService service;
 
-    @PostMapping
-    public ResponseEntity<Dispensacion> create(@RequestBody Dispensacion entidad) {
-        try {
-            Dispensacion nuevo = service.create(entidad);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    @Autowired
+    private DispensacionMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<Dispensacion>> getAll() {
-        List<Dispensacion> lista = service.getAll();
+    public ResponseEntity<List<DispensacionResponseDTO>> getAll() {
+        List<DispensacionResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -42,31 +36,41 @@ public class DispensacionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Dispensacion> getById(@PathVariable UUID id) {
-        Dispensacion entidad = service.getById(id);
-        if (entidad == null) {
+    public ResponseEntity<DispensacionResponseDTO> getById(@PathVariable Long id) {
+        Dispensacion dispensacion = service.getById(id);
+        if (dispensacion == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(entidad);
+        return ResponseEntity.ok(mapper.toResponseDTO(dispensacion));
+    }
+
+    @PostMapping
+    public ResponseEntity<DispensacionResponseDTO> create(@RequestBody DispensacionRequestDTO dto) {
+        try {
+            Dispensacion nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Dispensacion> update(@PathVariable UUID id, @RequestBody Dispensacion entidad) {
+    public ResponseEntity<DispensacionResponseDTO> update(@PathVariable Long id, @RequestBody DispensacionRequestDTO dto) {
         try {
-            Dispensacion actualizado = service.update(id, entidad);
+            Dispensacion actualizado = service.update(id, mapper.toEntity(dto));
             if (actualizado == null) {
                 return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(actualizado);
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        Dispensacion entidad = service.getById(id);
-        if (entidad == null) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        Dispensacion dispensacion = service.getById(id);
+        if (dispensacion == null) {
             return ResponseEntity.notFound().build();
         }
         service.delete(id);

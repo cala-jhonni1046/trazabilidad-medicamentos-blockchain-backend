@@ -1,7 +1,6 @@
 package ies.belgrano.medicamentos.operaciones.dispensacion;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,25 +15,25 @@ public class DispensacionService {
         return repo.findAll();
     }
 
-    public Dispensacion getById(UUID id) {
+    public Dispensacion getById(Long id) {
         return repo.findById(id).orElse(null);
     }
 
-    public Dispensacion create(Dispensacion entidad) {
-        return repo.save(entidad);
+    public Dispensacion create(Dispensacion dispensacion) {
+        return repo.save(dispensacion);
     }
 
-    public Dispensacion update(UUID id, Dispensacion entidad) {
+    public Dispensacion update(Long id, Dispensacion dispensacion) {
         Dispensacion existente = this.getById(id);
         if (existente == null) {
             return null;
         } else {
-            entidad.setId(id);
-            return repo.save(entidad);
+            dispensacion.setId(id);
+            return repo.save(dispensacion);
         }
     }
 
-    public void delete(UUID id) {
+    public void delete(Long id) {
         repo.deleteById(id);
     }
 }

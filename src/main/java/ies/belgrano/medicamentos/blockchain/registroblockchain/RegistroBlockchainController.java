@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/registros-blockchain")
@@ -22,19 +21,14 @@ public class RegistroBlockchainController {
     @Autowired
     private RegistroBlockchainService service;
 
-    @PostMapping
-    public ResponseEntity<RegistroBlockchain> create(@RequestBody RegistroBlockchain entidad) {
-        try {
-            RegistroBlockchain nuevo = service.create(entidad);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    @Autowired
+    private RegistroBlockchainMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<RegistroBlockchain>> getAll() {
-        List<RegistroBlockchain> lista = service.getAll();
+    public ResponseEntity<List<RegistroBlockchainResponseDTO>> getAll() {
+        List<RegistroBlockchainResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -42,31 +36,41 @@ public class RegistroBlockchainController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RegistroBlockchain> getById(@PathVariable UUID id) {
-        RegistroBlockchain entidad = service.getById(id);
-        if (entidad == null) {
+    public ResponseEntity<RegistroBlockchainResponseDTO> getById(@PathVariable Long id) {
+        RegistroBlockchain registro = service.getById(id);
+        if (registro == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(entidad);
+        return ResponseEntity.ok(mapper.toResponseDTO(registro));
+    }
+
+    @PostMapping
+    public ResponseEntity<RegistroBlockchainResponseDTO> create(@RequestBody RegistroBlockchainRequestDTO dto) {
+        try {
+            RegistroBlockchain nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RegistroBlockchain> update(@PathVariable UUID id, @RequestBody RegistroBlockchain entidad) {
+    public ResponseEntity<RegistroBlockchainResponseDTO> update(@PathVariable Long id, @RequestBody RegistroBlockchainRequestDTO dto) {
         try {
-            RegistroBlockchain actualizado = service.update(id, entidad);
+            RegistroBlockchain actualizado = service.update(id, mapper.toEntity(dto));
             if (actualizado == null) {
                 return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(actualizado);
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        RegistroBlockchain entidad = service.getById(id);
-        if (entidad == null) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        RegistroBlockchain registro = service.getById(id);
+        if (registro == null) {
             return ResponseEntity.notFound().build();
         }
         service.delete(id);

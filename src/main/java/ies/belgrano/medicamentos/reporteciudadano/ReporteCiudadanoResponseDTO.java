@@ -1,49 +1,38 @@
 package ies.belgrano.medicamentos.reporteciudadano;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
 
-import ies.belgrano.medicamentos.inspector.InspectorANMAT;
-import ies.belgrano.medicamentos.unidadTrazable.UnidadTrazable;
-import ies.belgrano.medicamentos.utils.BaseEntity;
+public class ReporteCiudadanoResponseDTO {
 
-@Entity
-@Table(name = "reportes_ciudadanos")
-public class ReporteCiudadano extends BaseEntity {
-
+    private Long id;
     private String codigoQRAfectado;
-
     private String inspectorAsignado;
-
     private String motivoReporte;
-
     private LocalDateTime fechaHoraReporte;
-
     private String estadoAuditoria;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
-    @ManyToOne
-    @JoinColumn(name = "unidad_trazable_id", nullable = true)
-    private UnidadTrazable unidadTrazable;
-
-    @ManyToOne
-    @JoinColumn(name = "inspector_id", nullable = true)
-    private InspectorANMAT inspector;
-
-    public ReporteCiudadano() {
+    public ReporteCiudadanoResponseDTO() {
     }
 
-    public ReporteCiudadano(String codigoQRAfectado, String inspectorAsignado, String motivoReporte, LocalDateTime fechaHoraReporte, String estadoAuditoria, UnidadTrazable unidadTrazable, InspectorANMAT inspector) {
+    public ReporteCiudadanoResponseDTO(Long id, String codigoQRAfectado, String inspectorAsignado, String motivoReporte, LocalDateTime fechaHoraReporte, String estadoAuditoria, LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
+        this.id = id;
         this.codigoQRAfectado = codigoQRAfectado;
         this.inspectorAsignado = inspectorAsignado;
         this.motivoReporte = motivoReporte;
         this.fechaHoraReporte = fechaHoraReporte;
         this.estadoAuditoria = estadoAuditoria;
-        this.unidadTrazable = unidadTrazable;
-        this.inspector = inspector;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getCodigoQRAfectado() {
@@ -86,19 +75,19 @@ public class ReporteCiudadano extends BaseEntity {
         this.estadoAuditoria = estadoAuditoria;
     }
 
-    public UnidadTrazable getUnidadTrazable() {
-        return unidadTrazable;
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
     }
 
-    public void setUnidadTrazable(UnidadTrazable unidadTrazable) {
-        this.unidadTrazable = unidadTrazable;
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 
-    public InspectorANMAT getInspector() {
-        return inspector;
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
     }
 
-    public void setInspector(InspectorANMAT inspector) {
-        this.inspector = inspector;
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
     }
 }

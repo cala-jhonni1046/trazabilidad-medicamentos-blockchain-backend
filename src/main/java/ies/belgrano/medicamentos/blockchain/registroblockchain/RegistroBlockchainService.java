@@ -1,7 +1,6 @@
 package ies.belgrano.medicamentos.blockchain.registroblockchain;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,25 +15,25 @@ public class RegistroBlockchainService {
         return repo.findAll();
     }
 
-    public RegistroBlockchain getById(UUID id) {
+    public RegistroBlockchain getById(Long id) {
         return repo.findById(id).orElse(null);
     }
 
-    public RegistroBlockchain create(RegistroBlockchain entidad) {
-        return repo.save(entidad);
+    public RegistroBlockchain create(RegistroBlockchain registro) {
+        return repo.save(registro);
     }
 
-    public RegistroBlockchain update(UUID id, RegistroBlockchain entidad) {
+    public RegistroBlockchain update(Long id, RegistroBlockchain registro) {
         RegistroBlockchain existente = this.getById(id);
         if (existente == null) {
             return null;
         } else {
-            entidad.setId(id);
-            return repo.save(entidad);
+            registro.setId(id);
+            return repo.save(registro);
         }
     }
 
-    public void delete(UUID id) {
+    public void delete(Long id) {
         repo.deleteById(id);
     }
 }
