@@ -11,7 +11,7 @@ public class EnlaceCUITResponseDTO {
     private String cuitFarmacia;
     private String numeroDisposicionANMAT;
     private String documentoCertificadoUrl;
-    private String estado;
+    private EstadoEnlaceCuit estado;
     private LocalDateTime fechaSolicitud;
     private LocalDateTime fechaAprobacionANMAT;
     private LocalDateTime fechaCreacion;
@@ -23,7 +23,7 @@ public class EnlaceCUITResponseDTO {
     public EnlaceCUITResponseDTO(Long id, String nombreLaboratorio, String cuitLaboratorio,
                                 String cuitLogistica, String cuitFarmacia,
                                 String numeroDisposicionANMAT, String documentoCertificadoUrl,
-                                String estado, LocalDateTime fechaSolicitud,
+                                EstadoEnlaceCuit estado, LocalDateTime fechaSolicitud,
                                 LocalDateTime fechaAprobacionANMAT,
                                 LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
         this.id = id;
@@ -96,11 +96,11 @@ public class EnlaceCUITResponseDTO {
         this.documentoCertificadoUrl = documentoCertificadoUrl;
     }
 
-    public String getEstado() {
+    public EstadoEnlaceCuit getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoEnlaceCuit estado) {
         this.estado = estado;
     }
 

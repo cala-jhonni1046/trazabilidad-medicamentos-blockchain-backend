@@ -4,13 +4,13 @@ public class UsuarioRequestDTO {
 
     private String email;
     private String passwordHash;
-    private String rol;
+    private RolUsuario rol;
     private Boolean activo;
 
     public UsuarioRequestDTO() {
     }
 
-    public UsuarioRequestDTO(String email, String passwordHash, String rol, Boolean activo) {
+    public UsuarioRequestDTO(String email, String passwordHash, RolUsuario rol, Boolean activo) {
         this.email = email;
         this.passwordHash = passwordHash;
         this.rol = rol;
@@ -33,11 +33,11 @@ public class UsuarioRequestDTO {
         this.passwordHash = passwordHash;
     }
 
-    public String getRol() {
+    public RolUsuario getRol() {
         return rol;
     }
 
-    public void setRol(String rol) {
+    public void setRol(RolUsuario rol) {
         this.rol = rol;
     }
 

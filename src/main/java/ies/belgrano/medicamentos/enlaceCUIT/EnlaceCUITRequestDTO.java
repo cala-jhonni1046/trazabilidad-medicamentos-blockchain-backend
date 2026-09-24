@@ -10,7 +10,7 @@ public class EnlaceCUITRequestDTO {
     private String cuitFarmacia;
     private String numeroDisposicionANMAT;
     private String documentoCertificadoUrl;
-    private String estado;
+    private EstadoEnlaceCuit estado;
     private LocalDateTime fechaSolicitud;
     private LocalDateTime fechaAprobacionANMAT;
 
@@ -20,7 +20,7 @@ public class EnlaceCUITRequestDTO {
     public EnlaceCUITRequestDTO(String nombreLaboratorio, String cuitLaboratorio,
                                String cuitLogistica, String cuitFarmacia,
                                String numeroDisposicionANMAT, String documentoCertificadoUrl,
-                               String estado, LocalDateTime fechaSolicitud,
+                               EstadoEnlaceCuit estado, LocalDateTime fechaSolicitud,
                                LocalDateTime fechaAprobacionANMAT) {
         this.nombreLaboratorio = nombreLaboratorio;
         this.cuitLaboratorio = cuitLaboratorio;
@@ -81,11 +81,11 @@ public class EnlaceCUITRequestDTO {
         this.documentoCertificadoUrl = documentoCertificadoUrl;
     }
 
-    public String getEstado() {
+    public EstadoEnlaceCuit getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoEnlaceCuit estado) {
         this.estado = estado;
     }
 

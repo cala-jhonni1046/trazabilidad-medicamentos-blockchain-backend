@@ -2,27 +2,36 @@ package ies.belgrano.medicamentos.inspector;
 
 import java.time.LocalDateTime;
 
+import ies.belgrano.medicamentos.usuario.RolUsuario;
+
 public class InspectorANMATResponseDTO {
 
     private Long id;
+    private String email;
+    private RolUsuario rol;
+    private Boolean activo;
     private String dni;
     private String legajoOficial;
     private String nombreCompleto;
     private String emailInstitucional;
     private LocalDateTime fechaHoraAlta;
     private String jefeAutorizador;
-    private String estado;
+    private EstadoInspector estado;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
 
     public InspectorANMATResponseDTO() {
     }
 
-    public InspectorANMATResponseDTO(Long id, String dni, String legajoOficial, String nombreCompleto,
+    public InspectorANMATResponseDTO(Long id, String email, RolUsuario rol, Boolean activo,
+                                    String dni, String legajoOficial, String nombreCompleto,
                                     String emailInstitucional, LocalDateTime fechaHoraAlta,
-                                    String jefeAutorizador, String estado,
+                                    String jefeAutorizador, EstadoInspector estado,
                                     LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
         this.id = id;
+        this.email = email;
+        this.rol = rol;
+        this.activo = activo;
         this.dni = dni;
         this.legajoOficial = legajoOficial;
         this.nombreCompleto = nombreCompleto;
@@ -40,6 +49,30 @@ public class InspectorANMATResponseDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public RolUsuario getRol() {
+        return rol;
+    }
+
+    public void setRol(RolUsuario rol) {
+        this.rol = rol;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 
     public String getDni() {
@@ -90,11 +123,11 @@ public class InspectorANMATResponseDTO {
         this.jefeAutorizador = jefeAutorizador;
     }
 
-    public String getEstado() {
+    public EstadoInspector getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoInspector estado) {
         this.estado = estado;
     }
 
