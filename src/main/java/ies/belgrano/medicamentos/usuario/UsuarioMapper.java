@@ -9,14 +9,19 @@ public class UsuarioMapper {
         if (dto == null) {
             return null;
         }
-        Usuario entity = new Usuario();
+        throw new UnsupportedOperationException("Usuario es una clase abstracta y no puede instanciarse directamente. Utilice la entidad especializada correspondiente.");
+    }
+
+    public void copyToEntity(UsuarioRequestDTO dto, Usuario entity) {
+        if (dto == null || entity == null) {
+            return;
+        }
         entity.setEmail(dto.getEmail());
         entity.setPasswordHash(dto.getPasswordHash());
         entity.setRol(dto.getRol());
         if (dto.getActivo() != null) {
             entity.setActivo(dto.getActivo());
         }
-        return entity;
     }
 
     public UsuarioResponseDTO toResponseDTO(Usuario entity) {

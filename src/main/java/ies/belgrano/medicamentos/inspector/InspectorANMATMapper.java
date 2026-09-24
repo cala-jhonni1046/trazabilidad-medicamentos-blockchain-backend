@@ -10,6 +10,12 @@ public class InspectorANMATMapper {
             return null;
         }
         InspectorANMAT entity = new InspectorANMAT();
+        entity.setEmail(dto.getEmail());
+        entity.setPasswordHash(dto.getPasswordHash());
+        entity.setRol(dto.getRol());
+        if (dto.getActivo() != null) {
+            entity.setActivo(dto.getActivo());
+        }
         entity.setDni(dto.getDni());
         entity.setLegajoOficial(dto.getLegajoOficial());
         entity.setNombreCompleto(dto.getNombreCompleto());
@@ -26,6 +32,9 @@ public class InspectorANMATMapper {
         }
         InspectorANMATResponseDTO dto = new InspectorANMATResponseDTO();
         dto.setId(entity.getId());
+        dto.setEmail(entity.getEmail());
+        dto.setRol(entity.getRol());
+        dto.setActivo(entity.isActivo());
         dto.setDni(entity.getDni());
         dto.setLegajoOficial(entity.getLegajoOficial());
         dto.setNombreCompleto(entity.getNombreCompleto());

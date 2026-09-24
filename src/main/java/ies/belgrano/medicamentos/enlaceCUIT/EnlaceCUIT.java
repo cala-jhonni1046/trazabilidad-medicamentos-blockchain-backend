@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import ies.belgrano.medicamentos.utils.BaseEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Entity
 public class EnlaceCUIT extends BaseEntity {
@@ -14,7 +16,8 @@ public class EnlaceCUIT extends BaseEntity {
 	private String cuitFarmacia;
 	private String numeroDisposicionANMAT;
 	private String documentoCertificadoUrl;
-	private String estado;
+	@Enumerated(EnumType.STRING)
+	private EstadoEnlaceCuit estado;
 	private LocalDateTime fechaSolicitud;
 	private LocalDateTime fechaAprobacionANMAT;
 	
@@ -66,11 +69,11 @@ public class EnlaceCUIT extends BaseEntity {
 		this.documentoCertificadoUrl = documentoCertificadoUrl;
 	}
 	
-	public String getEstado() {
+	public EstadoEnlaceCuit getEstado() {
 		return estado;
 	}
 	
-	public void setEstado(String estado) {
+	public void setEstado(EstadoEnlaceCuit estado) {
 		this.estado = estado;
 	}
 	

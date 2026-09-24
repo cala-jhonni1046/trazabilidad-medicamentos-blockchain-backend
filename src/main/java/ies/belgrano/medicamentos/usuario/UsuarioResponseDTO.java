@@ -6,7 +6,7 @@ public class UsuarioResponseDTO {
 
     private Long id;
     private String email;
-    private String rol;
+    private RolUsuario rol;
     private Boolean activo;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
@@ -14,7 +14,7 @@ public class UsuarioResponseDTO {
     public UsuarioResponseDTO() {
     }
 
-    public UsuarioResponseDTO(Long id, String email, String rol, Boolean activo,
+    public UsuarioResponseDTO(Long id, String email, RolUsuario rol, Boolean activo,
                               LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
         this.id = id;
         this.email = email;
@@ -40,11 +40,11 @@ public class UsuarioResponseDTO {
         this.email = email;
     }
 
-    public String getRol() {
+    public RolUsuario getRol() {
         return rol;
     }
 
-    public void setRol(String rol) {
+    public void setRol(RolUsuario rol) {
         this.rol = rol;
     }
 
