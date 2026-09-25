@@ -3,12 +3,19 @@ package ies.belgrano.medicamentos.inspector;
 import java.time.LocalDateTime;
 
 import ies.belgrano.medicamentos.usuario.Usuario;
+import ies.belgrano.medicamentos.utils.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
 @Entity
-public class InspectorANMAT extends Usuario {
+public class InspectorANMAT extends BaseEntity {
+	
+	@OneToOne
+	@JoinColumn(name = "usuario_id", nullable = false, unique = true)
+	private Usuario usuario;
 	
 	private String dni;
 	private String legajoOficial;
@@ -18,6 +25,14 @@ public class InspectorANMAT extends Usuario {
 	private String jefeAutorizador;
 	@Enumerated(EnumType.STRING)
 	private EstadoInspector estado;
+	
+	public Usuario getUsuario() {
+		return usuario;
+	}
+	
+	public void setUsuario(Usuario usuario) {
+		this.usuario = usuario;
+	}
 	
 	public String getDni() {
 		return dni;

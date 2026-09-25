@@ -1,17 +1,12 @@
 package ies.belgrano.medicamentos.usuario;
 
 import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "tipo_usuario")
-public abstract class Usuario extends BaseEntity {
+public class Usuario extends BaseEntity {
 
 	private String email;
 	private String passwordHash;

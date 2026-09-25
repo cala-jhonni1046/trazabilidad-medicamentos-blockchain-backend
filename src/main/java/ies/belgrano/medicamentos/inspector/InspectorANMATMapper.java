@@ -1,20 +1,25 @@
 package ies.belgrano.medicamentos.inspector;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import ies.belgrano.medicamentos.usuario.Usuario;
+import ies.belgrano.medicamentos.usuario.UsuarioRepository;
 
 @Component
 public class InspectorANMATMapper {
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     public InspectorANMAT toEntity(InspectorANMATRequestDTO dto) {
         if (dto == null) {
             return null;
         }
         InspectorANMAT entity = new InspectorANMAT();
-        entity.setEmail(dto.getEmail());
-        entity.setPasswordHash(dto.getPasswordHash());
-        entity.setRol(dto.getRol());
-        if (dto.getActivo() != null) {
-            entity.setActivo(dto.getActivo());
+        if (dto.getUsuarioId() != null) {
+            Usuario usuario = usuarioRepository.findById(dto.getUsuarioId()).orElse(null);
+            entity.setUsuario(usuario);
         }
         entity.setDni(dto.getDni());
         entity.setLegajoOficial(dto.getLegajoOficial());
@@ -32,9 +37,11 @@ public class InspectorANMATMapper {
         }
         InspectorANMATResponseDTO dto = new InspectorANMATResponseDTO();
         dto.setId(entity.getId());
-        dto.setEmail(entity.getEmail());
-        dto.setRol(entity.getRol());
-        dto.setActivo(entity.isActivo());
+        if (entity.getUsuario() != null) {
+            dto.setUsuarioId(entity.getUsuario().getId());
+            dto.setUsuarioEmail(entity.getUsuario().getEmail());
+            dto.setUsuarioRol(entity.getUsuario().getRol());
+        }
         dto.setDni(entity.getDni());
         dto.setLegajoOficial(entity.getLegajoOficial());
         dto.setNombreCompleto(entity.getNombreCompleto());
