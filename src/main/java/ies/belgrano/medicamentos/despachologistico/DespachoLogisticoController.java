@@ -25,7 +25,11 @@ public class DespachoLogisticoController {
 
     @GetMapping
     public ResponseEntity<List<DespachoLogistico>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+        List<DespachoLogistico> lista = service.getAll();
+        if (lista.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/{id}")
@@ -37,15 +41,22 @@ public class DespachoLogisticoController {
 
     @PostMapping
     public ResponseEntity<DespachoLogistico> create(@RequestBody DespachoLogistico entidad) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<DespachoLogistico> update(@PathVariable Long id, @RequestBody DespachoLogistico entidad) {
+        if (service.getById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
         try {
             return ResponseEntity.ok(service.update(id, entidad));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

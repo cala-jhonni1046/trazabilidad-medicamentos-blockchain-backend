@@ -25,7 +25,11 @@ public class CuarentenaController {
 
     @GetMapping
     public ResponseEntity<List<Cuarentena>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+        List<Cuarentena> lista = service.getAll();
+        if (lista.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/{id}")
@@ -37,15 +41,22 @@ public class CuarentenaController {
 
     @PostMapping
     public ResponseEntity<Cuarentena> create(@RequestBody Cuarentena entidad) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Cuarentena> update(@PathVariable Long id, @RequestBody Cuarentena entidad) {
+        if (service.getById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
         try {
             return ResponseEntity.ok(service.update(id, entidad));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

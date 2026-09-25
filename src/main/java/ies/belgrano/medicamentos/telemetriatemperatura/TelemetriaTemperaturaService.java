@@ -32,7 +32,7 @@ public class TelemetriaTemperaturaService {
             existente.setTemperatura(entidad.getTemperatura());
             existente.setFechaHora(entidad.getFechaHora());
             existente.setAlertaExcursion(entidad.getAlertaExcursion());
-            existente.setDespachoLogisticoId(entidad.getDespachoLogisticoId());
+            existente.setDespachoLogistico(entidad.getDespachoLogistico());
             existente.setObservaciones(entidad.getObservaciones());
             return repository.save(existente);
         }).orElseThrow(() -> new RuntimeException("TelemetriaTemperatura no encontrada con ID: " + id));

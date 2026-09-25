@@ -34,7 +34,7 @@ public class TelemetriaGPSService {
             existente.setAltitud(entidad.getAltitud());
             existente.setVelocidad(entidad.getVelocidad());
             existente.setFechaHora(entidad.getFechaHora());
-            existente.setDespachoLogisticoId(entidad.getDespachoLogisticoId());
+            existente.setDespachoLogistico(entidad.getDespachoLogistico());
             existente.setDireccionAproximada(entidad.getDireccionAproximada());
             return repository.save(existente);
         }).orElseThrow(() -> new RuntimeException("TelemetriaGPS no encontrada con ID: " + id));
