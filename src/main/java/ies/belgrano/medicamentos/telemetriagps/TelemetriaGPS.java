@@ -1,9 +1,12 @@
 package ies.belgrano.medicamentos.telemetriagps;
 
+import ies.belgrano.medicamentos.despachologistico.DespachoLogistico;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
@@ -21,14 +24,18 @@ public class TelemetriaGPS {
     private Double altitud;
     private Double velocidad;
     private LocalDateTime fechaHora;
-    private Long despachoLogisticoId;
+
+    @ManyToOne
+    @JoinColumn(name = "despacho_logistico_id")
+    private DespachoLogistico despachoLogistico;
+
     private String direccionAproximada;
 
     public TelemetriaGPS() {
     }
 
     public TelemetriaGPS(Long id, String dispositivoGpsId, Double latitud, Double longitud, Double altitud,
-                         Double velocidad, LocalDateTime fechaHora, Long despachoLogisticoId,
+                         Double velocidad, LocalDateTime fechaHora, DespachoLogistico despachoLogistico,
                          String direccionAproximada) {
         this.id = id;
         this.dispositivoGpsId = dispositivoGpsId;
@@ -37,7 +44,7 @@ public class TelemetriaGPS {
         this.altitud = altitud;
         this.velocidad = velocidad;
         this.fechaHora = fechaHora;
-        this.despachoLogisticoId = despachoLogisticoId;
+        this.despachoLogistico = despachoLogistico;
         this.direccionAproximada = direccionAproximada;
     }
 
@@ -97,12 +104,12 @@ public class TelemetriaGPS {
         this.fechaHora = fechaHora;
     }
 
-    public Long getDespachoLogisticoId() {
-        return despachoLogisticoId;
+    public DespachoLogistico getDespachoLogistico() {
+        return despachoLogistico;
     }
 
-    public void setDespachoLogisticoId(Long despachoLogisticoId) {
-        this.despachoLogisticoId = despachoLogisticoId;
+    public void setDespachoLogistico(DespachoLogistico despachoLogistico) {
+        this.despachoLogistico = despachoLogistico;
     }
 
     public String getDireccionAproximada() {

@@ -1,9 +1,12 @@
 package ies.belgrano.medicamentos.despachologistico;
 
+import ies.belgrano.medicamentos.lote.Lote;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
@@ -29,6 +32,10 @@ public class DespachoLogistico {
     private Double temperaturaMaximaPermitida;
     private String observaciones;
 
+    @ManyToOne
+    @JoinColumn(name = "lote_id")
+    private Lote lote;
+
     public DespachoLogistico() {
     }
 
@@ -50,6 +57,16 @@ public class DespachoLogistico {
         this.temperaturaMinimaPermitida = temperaturaMinimaPermitida;
         this.temperaturaMaximaPermitida = temperaturaMaximaPermitida;
         this.observaciones = observaciones;
+    }
+
+    public DespachoLogistico(Long id, String numeroRemito, String codigoSeguimiento, String origen, String destino,
+                            String transportista, String vehiculoPatente, LocalDateTime fechaSalida,
+                            LocalDateTime fechaEstimadaEntrega, LocalDateTime fechaEntregaReal, String estado,
+                            Double temperaturaMinimaPermitida, Double temperaturaMaximaPermitida, String observaciones,
+                            Lote lote) {
+        this(id, numeroRemito, codigoSeguimiento, origen, destino, transportista, vehiculoPatente, fechaSalida,
+             fechaEstimadaEntrega, fechaEntregaReal, estado, temperaturaMinimaPermitida, temperaturaMaximaPermitida, observaciones);
+        this.lote = lote;
     }
 
     public Long getId() {
@@ -162,5 +179,13 @@ public class DespachoLogistico {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public Lote getLote() {
+        return lote;
+    }
+
+    public void setLote(Lote lote) {
+        this.lote = lote;
     }
 }

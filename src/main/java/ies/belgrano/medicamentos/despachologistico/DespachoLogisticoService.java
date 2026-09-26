@@ -41,6 +41,7 @@ public class DespachoLogisticoService {
             existente.setTemperaturaMinimaPermitida(entidad.getTemperaturaMinimaPermitida());
             existente.setTemperaturaMaximaPermitida(entidad.getTemperaturaMaximaPermitida());
             existente.setObservaciones(entidad.getObservaciones());
+            existente.setLote(entidad.getLote());
             return repository.save(existente);
         }).orElseThrow(() -> new RuntimeException("DespachoLogistico no encontrado con ID: " + id));
     }

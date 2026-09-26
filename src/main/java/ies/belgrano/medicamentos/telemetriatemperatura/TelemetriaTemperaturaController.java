@@ -25,7 +25,11 @@ public class TelemetriaTemperaturaController {
 
     @GetMapping
     public ResponseEntity<List<TelemetriaTemperatura>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+        List<TelemetriaTemperatura> lista = service.getAll();
+        if (lista.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/{id}")
@@ -37,15 +41,22 @@ public class TelemetriaTemperaturaController {
 
     @PostMapping
     public ResponseEntity<TelemetriaTemperatura> create(@RequestBody TelemetriaTemperatura entidad) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TelemetriaTemperatura> update(@PathVariable Long id, @RequestBody TelemetriaTemperatura entidad) {
+        if (service.getById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
         try {
             return ResponseEntity.ok(service.update(id, entidad));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

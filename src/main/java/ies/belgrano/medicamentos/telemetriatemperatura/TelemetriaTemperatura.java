@@ -1,9 +1,12 @@
 package ies.belgrano.medicamentos.telemetriatemperatura;
 
+import ies.belgrano.medicamentos.despachologistico.DespachoLogistico;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
@@ -19,20 +22,24 @@ public class TelemetriaTemperatura {
     private Double temperatura;
     private LocalDateTime fechaHora;
     private Boolean alertaExcursion;
-    private Long despachoLogisticoId;
+
+    @ManyToOne
+    @JoinColumn(name = "despacho_logistico_id")
+    private DespachoLogistico despachoLogistico;
+
     private String observaciones;
 
     public TelemetriaTemperatura() {
     }
 
     public TelemetriaTemperatura(Long id, String sensorId, Double temperatura, LocalDateTime fechaHora,
-                                Boolean alertaExcursion, Long despachoLogisticoId, String observaciones) {
+                                Boolean alertaExcursion, DespachoLogistico despachoLogistico, String observaciones) {
         this.id = id;
         this.sensorId = sensorId;
         this.temperatura = temperatura;
         this.fechaHora = fechaHora;
         this.alertaExcursion = alertaExcursion;
-        this.despachoLogisticoId = despachoLogisticoId;
+        this.despachoLogistico = despachoLogistico;
         this.observaciones = observaciones;
     }
 
@@ -76,12 +83,12 @@ public class TelemetriaTemperatura {
         this.alertaExcursion = alertaExcursion;
     }
 
-    public Long getDespachoLogisticoId() {
-        return despachoLogisticoId;
+    public DespachoLogistico getDespachoLogistico() {
+        return despachoLogistico;
     }
 
-    public void setDespachoLogisticoId(Long despachoLogisticoId) {
-        this.despachoLogisticoId = despachoLogisticoId;
+    public void setDespachoLogistico(DespachoLogistico despachoLogistico) {
+        this.despachoLogistico = despachoLogistico;
     }
 
     public String getObservaciones() {
