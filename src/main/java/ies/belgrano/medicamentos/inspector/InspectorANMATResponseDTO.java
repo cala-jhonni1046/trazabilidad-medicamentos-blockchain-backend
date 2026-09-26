@@ -7,9 +7,9 @@ import ies.belgrano.medicamentos.usuario.RolUsuario;
 public class InspectorANMATResponseDTO {
 
     private Long id;
-    private String email;
-    private RolUsuario rol;
-    private Boolean activo;
+    private Long usuarioId;
+    private String usuarioEmail;
+    private RolUsuario usuarioRol;
     private String dni;
     private String legajoOficial;
     private String nombreCompleto;
@@ -23,15 +23,15 @@ public class InspectorANMATResponseDTO {
     public InspectorANMATResponseDTO() {
     }
 
-    public InspectorANMATResponseDTO(Long id, String email, RolUsuario rol, Boolean activo,
+    public InspectorANMATResponseDTO(Long id, Long usuarioId, String usuarioEmail, RolUsuario usuarioRol,
                                     String dni, String legajoOficial, String nombreCompleto,
                                     String emailInstitucional, LocalDateTime fechaHoraAlta,
                                     String jefeAutorizador, EstadoInspector estado,
                                     LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
         this.id = id;
-        this.email = email;
-        this.rol = rol;
-        this.activo = activo;
+        this.usuarioId = usuarioId;
+        this.usuarioEmail = usuarioEmail;
+        this.usuarioRol = usuarioRol;
         this.dni = dni;
         this.legajoOficial = legajoOficial;
         this.nombreCompleto = nombreCompleto;
@@ -51,28 +51,28 @@ public class InspectorANMATResponseDTO {
         this.id = id;
     }
 
-    public String getEmail() {
-        return email;
+    public Long getUsuarioId() {
+        return usuarioId;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 
-    public RolUsuario getRol() {
-        return rol;
+    public String getUsuarioEmail() {
+        return usuarioEmail;
     }
 
-    public void setRol(RolUsuario rol) {
-        this.rol = rol;
+    public void setUsuarioEmail(String usuarioEmail) {
+        this.usuarioEmail = usuarioEmail;
     }
 
-    public Boolean getActivo() {
-        return activo;
+    public RolUsuario getUsuarioRol() {
+        return usuarioRol;
     }
 
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
+    public void setUsuarioRol(RolUsuario usuarioRol) {
+        this.usuarioRol = usuarioRol;
     }
 
     public String getDni() {

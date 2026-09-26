@@ -2,14 +2,9 @@ package ies.belgrano.medicamentos.inspector;
 
 import java.time.LocalDateTime;
 
-import ies.belgrano.medicamentos.usuario.RolUsuario;
-
 public class InspectorANMATRequestDTO {
 
-    private String email;
-    private String passwordHash;
-    private RolUsuario rol;
-    private Boolean activo;
+    private Long usuarioId;
     private String dni;
     private String legajoOficial;
     private String nombreCompleto;
@@ -21,14 +16,11 @@ public class InspectorANMATRequestDTO {
     public InspectorANMATRequestDTO() {
     }
 
-    public InspectorANMATRequestDTO(String email, String passwordHash, RolUsuario rol, Boolean activo,
+    public InspectorANMATRequestDTO(Long usuarioId,
                                    String dni, String legajoOficial, String nombreCompleto,
                                    String emailInstitucional, LocalDateTime fechaHoraAlta,
                                    String jefeAutorizador, EstadoInspector estado) {
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.rol = rol;
-        this.activo = activo;
+        this.usuarioId = usuarioId;
         this.dni = dni;
         this.legajoOficial = legajoOficial;
         this.nombreCompleto = nombreCompleto;
@@ -38,36 +30,12 @@ public class InspectorANMATRequestDTO {
         this.estado = estado;
     }
 
-    public String getEmail() {
-        return email;
+    public Long getUsuarioId() {
+        return usuarioId;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public RolUsuario getRol() {
-        return rol;
-    }
-
-    public void setRol(RolUsuario rol) {
-        this.rol = rol;
-    }
-
-    public Boolean getActivo() {
-        return activo;
-    }
-
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 
     public String getDni() {
