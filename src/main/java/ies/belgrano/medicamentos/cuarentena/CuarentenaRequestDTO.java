@@ -1,13 +1,8 @@
 package ies.belgrano.medicamentos.cuarentena;
 
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "cuarentenas")
-public class Cuarentena extends BaseEntity {
+public class CuarentenaRequestDTO {
 
     private String codigoCuarentena;
     private LocalDateTime fechaInicio;
@@ -21,12 +16,12 @@ public class Cuarentena extends BaseEntity {
     private String resolucionFinal;
     private String observaciones;
 
-    public Cuarentena() {
+    public CuarentenaRequestDTO() {
     }
 
-    public Cuarentena(String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
-            String motivo, String estado, String responsable, String ubicacionFisica,
-            Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones) {
+    public CuarentenaRequestDTO(String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
+                                String motivo, String estado, String responsable, String ubicacionFisica,
+                                Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones) {
         this.codigoCuarentena = codigoCuarentena;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
@@ -38,14 +33,6 @@ public class Cuarentena extends BaseEntity {
         this.unidadTrazableId = unidadTrazableId;
         this.resolucionFinal = resolucionFinal;
         this.observaciones = observaciones;
-    }
-
-    public Cuarentena(Long id, String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
-            String motivo, String estado, String responsable, String ubicacionFisica,
-            Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones) {
-        this(codigoCuarentena, fechaInicio, fechaFin, motivo, estado, responsable, ubicacionFisica,
-             loteId, unidadTrazableId, resolucionFinal, observaciones);
-        this.setId(id);
     }
 
     public String getCodigoCuarentena() {

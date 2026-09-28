@@ -1,17 +1,10 @@
 package ies.belgrano.medicamentos.despachologistico;
 
-import ies.belgrano.medicamentos.lote.Lote;
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "despachos_logisticos")
-public class DespachoLogistico extends BaseEntity {
+public class DespachoLogisticoResponseDTO {
 
+    private Long id;
     private String numeroRemito;
     private String codigoSeguimiento;
     private String origen;
@@ -25,18 +18,21 @@ public class DespachoLogistico extends BaseEntity {
     private Double temperaturaMinimaPermitida;
     private Double temperaturaMaximaPermitida;
     private String observaciones;
+    private Long loteId;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
-    @ManyToOne
-    @JoinColumn(name = "lote_id")
-    private Lote lote;
-
-    public DespachoLogistico() {
+    public DespachoLogisticoResponseDTO() {
     }
 
-    public DespachoLogistico(String numeroRemito, String codigoSeguimiento, String origen, String destino,
-            String transportista, String vehiculoPatente, LocalDateTime fechaSalida,
-            LocalDateTime fechaEstimadaEntrega, LocalDateTime fechaEntregaReal, String estado,
-            Double temperaturaMinimaPermitida, Double temperaturaMaximaPermitida, String observaciones) {
+    public DespachoLogisticoResponseDTO(Long id, String numeroRemito, String codigoSeguimiento, String origen,
+                                       String destino, String transportista, String vehiculoPatente,
+                                       LocalDateTime fechaSalida, LocalDateTime fechaEstimadaEntrega,
+                                       LocalDateTime fechaEntregaReal, String estado,
+                                       Double temperaturaMinimaPermitida, Double temperaturaMaximaPermitida,
+                                       String observaciones, Long loteId,
+                                       LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
+        this.id = id;
         this.numeroRemito = numeroRemito;
         this.codigoSeguimiento = codigoSeguimiento;
         this.origen = origen;
@@ -50,27 +46,17 @@ public class DespachoLogistico extends BaseEntity {
         this.temperaturaMinimaPermitida = temperaturaMinimaPermitida;
         this.temperaturaMaximaPermitida = temperaturaMaximaPermitida;
         this.observaciones = observaciones;
+        this.loteId = loteId;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
     }
 
-    public DespachoLogistico(Long id, String numeroRemito, String codigoSeguimiento, String origen, String destino,
-            String transportista, String vehiculoPatente, LocalDateTime fechaSalida,
-            LocalDateTime fechaEstimadaEntrega, LocalDateTime fechaEntregaReal, String estado,
-            Double temperaturaMinimaPermitida, Double temperaturaMaximaPermitida, String observaciones) {
-        this(numeroRemito, codigoSeguimiento, origen, destino, transportista, vehiculoPatente, fechaSalida,
-                fechaEstimadaEntrega, fechaEntregaReal, estado, temperaturaMinimaPermitida, temperaturaMaximaPermitida,
-                observaciones);
-        this.setId(id);
+    public Long getId() {
+        return id;
     }
 
-    public DespachoLogistico(Long id, String numeroRemito, String codigoSeguimiento, String origen, String destino,
-            String transportista, String vehiculoPatente, LocalDateTime fechaSalida,
-            LocalDateTime fechaEstimadaEntrega, LocalDateTime fechaEntregaReal, String estado,
-            Double temperaturaMinimaPermitida, Double temperaturaMaximaPermitida, String observaciones,
-            Lote lote) {
-        this(id, numeroRemito, codigoSeguimiento, origen, destino, transportista, vehiculoPatente, fechaSalida,
-                fechaEstimadaEntrega, fechaEntregaReal, estado, temperaturaMinimaPermitida, temperaturaMaximaPermitida,
-                observaciones);
-        this.lote = lote;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNumeroRemito() {
@@ -177,11 +163,27 @@ public class DespachoLogistico extends BaseEntity {
         this.observaciones = observaciones;
     }
 
-    public Lote getLote() {
-        return lote;
+    public Long getLoteId() {
+        return loteId;
     }
 
-    public void setLote(Lote lote) {
-        this.lote = lote;
+    public void setLoteId(Long loteId) {
+        this.loteId = loteId;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
     }
 }

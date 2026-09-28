@@ -1,5 +1,6 @@
 package ies.belgrano.medicamentos.telemetriagps;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,15 +18,17 @@ import java.util.List;
 @RequestMapping("/api/telemetrias-gps")
 public class TelemetriaGPSController {
 
-    private final TelemetriaGPSService service;
+    @Autowired
+    private TelemetriaGPSService service;
 
-    public TelemetriaGPSController(TelemetriaGPSService service) {
-        this.service = service;
-    }
+    @Autowired
+    private TelemetriaGPSMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<TelemetriaGPS>> getAll() {
-        List<TelemetriaGPS> lista = service.getAll();
+    public ResponseEntity<List<TelemetriaGPSResponseDTO>> getAll() {
+        List<TelemetriaGPSResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -33,28 +36,32 @@ public class TelemetriaGPSController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TelemetriaGPS> getById(@PathVariable Long id) {
-        return service.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<TelemetriaGPSResponseDTO> getById(@PathVariable Long id) {
+        TelemetriaGPS entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(mapper.toResponseDTO(entity));
     }
 
     @PostMapping
-    public ResponseEntity<TelemetriaGPS> create(@RequestBody TelemetriaGPS entidad) {
+    public ResponseEntity<TelemetriaGPSResponseDTO> create(@RequestBody TelemetriaGPSRequestDTO dto) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+            TelemetriaGPS nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TelemetriaGPS> update(@PathVariable Long id, @RequestBody TelemetriaGPS entidad) {
-        if (service.getById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<TelemetriaGPSResponseDTO> update(@PathVariable Long id, @RequestBody TelemetriaGPSRequestDTO dto) {
         try {
-            return ResponseEntity.ok(service.update(id, entidad));
+            TelemetriaGPS actualizado = service.update(id, mapper.toEntity(dto));
+            if (actualizado == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -62,9 +69,11 @@ public class TelemetriaGPSController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.delete(id)) {
-            return ResponseEntity.noContent().build();
+        TelemetriaGPS entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

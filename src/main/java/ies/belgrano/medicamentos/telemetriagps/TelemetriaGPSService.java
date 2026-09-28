@@ -1,50 +1,39 @@
 package ies.belgrano.medicamentos.telemetriagps;
 
-import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class TelemetriaGPSService {
 
-    private final TelemetriaGPSRepository repository;
-
-    public TelemetriaGPSService(TelemetriaGPSRepository repository) {
-        this.repository = repository;
-    }
+    @Autowired
+    private TelemetriaGPSRepository repo;
 
     public List<TelemetriaGPS> getAll() {
-        return repository.findAll();
+        return repo.findAll();
     }
 
-    public Optional<TelemetriaGPS> getById(Long id) {
-        return repository.findById(id);
+    public TelemetriaGPS getById(Long id) {
+        return repo.findById(id).orElse(null);
     }
 
     public TelemetriaGPS create(TelemetriaGPS entidad) {
-        entidad.setId(null);
-        return repository.save(entidad);
+        return repo.save(entidad);
     }
 
     public TelemetriaGPS update(Long id, TelemetriaGPS entidad) {
-        return repository.findById(id).map(existente -> {
-            existente.setDispositivoGpsId(entidad.getDispositivoGpsId());
-            existente.setLatitud(entidad.getLatitud());
-            existente.setLongitud(entidad.getLongitud());
-            existente.setAltitud(entidad.getAltitud());
-            existente.setVelocidad(entidad.getVelocidad());
-            existente.setFechaHora(entidad.getFechaHora());
-            existente.setDespachoLogistico(entidad.getDespachoLogistico());
-            existente.setDireccionAproximada(entidad.getDireccionAproximada());
-            return repository.save(existente);
-        }).orElseThrow(() -> new RuntimeException("TelemetriaGPS no encontrada con ID: " + id));
+        TelemetriaGPS existente = this.getById(id);
+        if (existente == null) {
+            return null;
+        } else {
+            entidad.setId(id);
+            return repo.save(entidad);
+        }
     }
 
-    public boolean delete(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return true;
-        }
-        return false;
+    public void delete(Long id) {
+        repo.deleteById(id);
     }
 }

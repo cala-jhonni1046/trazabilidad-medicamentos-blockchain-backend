@@ -1,56 +1,39 @@
 package ies.belgrano.medicamentos.despachologistico;
 
-import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class DespachoLogisticoService {
 
-    private final DespachoLogisticoRepository repository;
-
-    public DespachoLogisticoService(DespachoLogisticoRepository repository) {
-        this.repository = repository;
-    }
+    @Autowired
+    private DespachoLogisticoRepository repo;
 
     public List<DespachoLogistico> getAll() {
-        return repository.findAll();
+        return repo.findAll();
     }
 
-    public Optional<DespachoLogistico> getById(Long id) {
-        return repository.findById(id);
+    public DespachoLogistico getById(Long id) {
+        return repo.findById(id).orElse(null);
     }
 
     public DespachoLogistico create(DespachoLogistico entidad) {
-        entidad.setId(null);
-        return repository.save(entidad);
+        return repo.save(entidad);
     }
 
     public DespachoLogistico update(Long id, DespachoLogistico entidad) {
-        return repository.findById(id).map(existente -> {
-            existente.setNumeroRemito(entidad.getNumeroRemito());
-            existente.setCodigoSeguimiento(entidad.getCodigoSeguimiento());
-            existente.setOrigen(entidad.getOrigen());
-            existente.setDestino(entidad.getDestino());
-            existente.setTransportista(entidad.getTransportista());
-            existente.setVehiculoPatente(entidad.getVehiculoPatente());
-            existente.setFechaSalida(entidad.getFechaSalida());
-            existente.setFechaEstimadaEntrega(entidad.getFechaEstimadaEntrega());
-            existente.setFechaEntregaReal(entidad.getFechaEntregaReal());
-            existente.setEstado(entidad.getEstado());
-            existente.setTemperaturaMinimaPermitida(entidad.getTemperaturaMinimaPermitida());
-            existente.setTemperaturaMaximaPermitida(entidad.getTemperaturaMaximaPermitida());
-            existente.setObservaciones(entidad.getObservaciones());
-            existente.setLote(entidad.getLote());
-            return repository.save(existente);
-        }).orElseThrow(() -> new RuntimeException("DespachoLogistico no encontrado con ID: " + id));
+        DespachoLogistico existente = this.getById(id);
+        if (existente == null) {
+            return null;
+        } else {
+            entidad.setId(id);
+            return repo.save(entidad);
+        }
     }
 
-    public boolean delete(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return true;
-        }
-        return false;
+    public void delete(Long id) {
+        repo.deleteById(id);
     }
 }

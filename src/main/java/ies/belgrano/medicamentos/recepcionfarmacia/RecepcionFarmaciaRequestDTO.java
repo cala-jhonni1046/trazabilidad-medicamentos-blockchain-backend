@@ -1,13 +1,8 @@
 package ies.belgrano.medicamentos.recepcionfarmacia;
 
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "recepciones_farmacia")
-public class RecepcionFarmacia extends BaseEntity {
+public class RecepcionFarmaciaRequestDTO {
 
     private String numeroComprobante;
     private LocalDateTime fechaHoraRecepcion;
@@ -19,13 +14,13 @@ public class RecepcionFarmacia extends BaseEntity {
     private Boolean cadenaFrioIntacta;
     private String observaciones;
 
-    public RecepcionFarmacia() {
+    public RecepcionFarmaciaRequestDTO() {
     }
 
-    public RecepcionFarmacia(String numeroComprobante, LocalDateTime fechaHoraRecepcion,
-                            String farmaciaCuit, String farmaciaNombre, String farmaceuticoResponsable,
-                            Long despachoLogisticoId, String estadoConformidad, Boolean cadenaFrioIntacta,
-                            String observaciones) {
+    public RecepcionFarmaciaRequestDTO(String numeroComprobante, LocalDateTime fechaHoraRecepcion,
+                                      String farmaciaCuit, String farmaciaNombre, String farmaceuticoResponsable,
+                                      Long despachoLogisticoId, String estadoConformidad, Boolean cadenaFrioIntacta,
+                                      String observaciones) {
         this.numeroComprobante = numeroComprobante;
         this.fechaHoraRecepcion = fechaHoraRecepcion;
         this.farmaciaCuit = farmaciaCuit;
@@ -35,15 +30,6 @@ public class RecepcionFarmacia extends BaseEntity {
         this.estadoConformidad = estadoConformidad;
         this.cadenaFrioIntacta = cadenaFrioIntacta;
         this.observaciones = observaciones;
-    }
-
-    public RecepcionFarmacia(Long id, String numeroComprobante, LocalDateTime fechaHoraRecepcion,
-                            String farmaciaCuit, String farmaciaNombre, String farmaceuticoResponsable,
-                            Long despachoLogisticoId, String estadoConformidad, Boolean cadenaFrioIntacta,
-                            String observaciones) {
-        this(numeroComprobante, fechaHoraRecepcion, farmaciaCuit, farmaciaNombre, farmaceuticoResponsable,
-             despachoLogisticoId, estadoConformidad, cadenaFrioIntacta, observaciones);
-        this.setId(id);
     }
 
     public String getNumeroComprobante() {
