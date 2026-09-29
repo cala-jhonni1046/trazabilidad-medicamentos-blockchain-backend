@@ -1,4 +1,4 @@
-package ies.belgrano.medicamentos.operaciones.dispensacion;
+package ies.belgrano.medicamentos.dispensacion;
 
 import java.util.List;
 

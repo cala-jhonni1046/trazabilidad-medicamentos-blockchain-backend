@@ -1,51 +1,47 @@
 package ies.belgrano.medicamentos.telemetriagps;
 
-import ies.belgrano.medicamentos.despachologistico.DespachoLogistico;
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "telemetrias_gps")
-public class TelemetriaGPS extends BaseEntity {
+public class TelemetriaGPSResponseDTO {
 
+    private Long id;
     private String dispositivoGpsId;
     private Double latitud;
     private Double longitud;
     private Double altitud;
     private Double velocidad;
     private LocalDateTime fechaHora;
-
-    @ManyToOne
-    @JoinColumn(name = "despacho_logistico_id")
-    private DespachoLogistico despachoLogistico;
-
+    private Long despachoLogisticoId;
     private String direccionAproximada;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
-    public TelemetriaGPS() {
+    public TelemetriaGPSResponseDTO() {
     }
 
-    public TelemetriaGPS(String dispositivoGpsId, Double latitud, Double longitud, Double altitud,
-                         Double velocidad, LocalDateTime fechaHora, DespachoLogistico despachoLogistico,
-                         String direccionAproximada) {
+    public TelemetriaGPSResponseDTO(Long id, String dispositivoGpsId, Double latitud, Double longitud, Double altitud,
+                                    Double velocidad, LocalDateTime fechaHora, Long despachoLogisticoId,
+                                    String direccionAproximada, LocalDateTime fechaCreacion,
+                                    LocalDateTime fechaActualizacion) {
+        this.id = id;
         this.dispositivoGpsId = dispositivoGpsId;
         this.latitud = latitud;
         this.longitud = longitud;
         this.altitud = altitud;
         this.velocidad = velocidad;
         this.fechaHora = fechaHora;
-        this.despachoLogistico = despachoLogistico;
+        this.despachoLogisticoId = despachoLogisticoId;
         this.direccionAproximada = direccionAproximada;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
     }
 
-    public TelemetriaGPS(Long id, String dispositivoGpsId, Double latitud, Double longitud, Double altitud,
-                         Double velocidad, LocalDateTime fechaHora, DespachoLogistico despachoLogistico,
-                         String direccionAproximada) {
-        this(dispositivoGpsId, latitud, longitud, altitud, velocidad, fechaHora, despachoLogistico, direccionAproximada);
-        this.setId(id);
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getDispositivoGpsId() {
@@ -96,12 +92,12 @@ public class TelemetriaGPS extends BaseEntity {
         this.fechaHora = fechaHora;
     }
 
-    public DespachoLogistico getDespachoLogistico() {
-        return despachoLogistico;
+    public Long getDespachoLogisticoId() {
+        return despachoLogisticoId;
     }
 
-    public void setDespachoLogistico(DespachoLogistico despachoLogistico) {
-        this.despachoLogistico = despachoLogistico;
+    public void setDespachoLogisticoId(Long despachoLogisticoId) {
+        this.despachoLogisticoId = despachoLogisticoId;
     }
 
     public String getDireccionAproximada() {
@@ -110,5 +106,21 @@ public class TelemetriaGPS extends BaseEntity {
 
     public void setDireccionAproximada(String direccionAproximada) {
         this.direccionAproximada = direccionAproximada;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
     }
 }

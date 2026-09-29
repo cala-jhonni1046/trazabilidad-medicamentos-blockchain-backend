@@ -1,5 +1,6 @@
 package ies.belgrano.medicamentos.despachologistico;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,15 +18,17 @@ import java.util.List;
 @RequestMapping("/api/despachos-logisticos")
 public class DespachoLogisticoController {
 
-    private final DespachoLogisticoService service;
+    @Autowired
+    private DespachoLogisticoService service;
 
-    public DespachoLogisticoController(DespachoLogisticoService service) {
-        this.service = service;
-    }
+    @Autowired
+    private DespachoLogisticoMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<DespachoLogistico>> getAll() {
-        List<DespachoLogistico> lista = service.getAll();
+    public ResponseEntity<List<DespachoLogisticoResponseDTO>> getAll() {
+        List<DespachoLogisticoResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -33,28 +36,32 @@ public class DespachoLogisticoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DespachoLogistico> getById(@PathVariable Long id) {
-        return service.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<DespachoLogisticoResponseDTO> getById(@PathVariable Long id) {
+        DespachoLogistico entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(mapper.toResponseDTO(entity));
     }
 
     @PostMapping
-    public ResponseEntity<DespachoLogistico> create(@RequestBody DespachoLogistico entidad) {
+    public ResponseEntity<DespachoLogisticoResponseDTO> create(@RequestBody DespachoLogisticoRequestDTO dto) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+            DespachoLogistico nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DespachoLogistico> update(@PathVariable Long id, @RequestBody DespachoLogistico entidad) {
-        if (service.getById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<DespachoLogisticoResponseDTO> update(@PathVariable Long id, @RequestBody DespachoLogisticoRequestDTO dto) {
         try {
-            return ResponseEntity.ok(service.update(id, entidad));
+            DespachoLogistico actualizado = service.update(id, mapper.toEntity(dto));
+            if (actualizado == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -62,9 +69,11 @@ public class DespachoLogisticoController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.delete(id)) {
-            return ResponseEntity.noContent().build();
+        DespachoLogistico entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

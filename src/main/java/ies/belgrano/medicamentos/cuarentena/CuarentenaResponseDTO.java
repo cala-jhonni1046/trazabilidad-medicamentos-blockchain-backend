@@ -1,14 +1,10 @@
 package ies.belgrano.medicamentos.cuarentena;
 
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "cuarentenas")
-public class Cuarentena extends BaseEntity {
+public class CuarentenaResponseDTO {
 
+    private Long id;
     private String codigoCuarentena;
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
@@ -20,13 +16,17 @@ public class Cuarentena extends BaseEntity {
     private Long unidadTrazableId;
     private String resolucionFinal;
     private String observaciones;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
-    public Cuarentena() {
+    public CuarentenaResponseDTO() {
     }
 
-    public Cuarentena(String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
-            String motivo, String estado, String responsable, String ubicacionFisica,
-            Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones) {
+    public CuarentenaResponseDTO(Long id, String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
+                                 String motivo, String estado, String responsable, String ubicacionFisica,
+                                 Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones,
+                                 LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
+        this.id = id;
         this.codigoCuarentena = codigoCuarentena;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
@@ -38,14 +38,16 @@ public class Cuarentena extends BaseEntity {
         this.unidadTrazableId = unidadTrazableId;
         this.resolucionFinal = resolucionFinal;
         this.observaciones = observaciones;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
     }
 
-    public Cuarentena(Long id, String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
-            String motivo, String estado, String responsable, String ubicacionFisica,
-            Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones) {
-        this(codigoCuarentena, fechaInicio, fechaFin, motivo, estado, responsable, ubicacionFisica,
-             loteId, unidadTrazableId, resolucionFinal, observaciones);
-        this.setId(id);
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getCodigoCuarentena() {
@@ -134,5 +136,21 @@ public class Cuarentena extends BaseEntity {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
     }
 }

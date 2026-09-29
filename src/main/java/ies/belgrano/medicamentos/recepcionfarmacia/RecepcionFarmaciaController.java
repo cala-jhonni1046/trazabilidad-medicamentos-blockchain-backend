@@ -1,5 +1,6 @@
 package ies.belgrano.medicamentos.recepcionfarmacia;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,15 +18,17 @@ import java.util.List;
 @RequestMapping("/api/recepciones-farmacia")
 public class RecepcionFarmaciaController {
 
-    private final RecepcionFarmaciaService service;
+    @Autowired
+    private RecepcionFarmaciaService service;
 
-    public RecepcionFarmaciaController(RecepcionFarmaciaService service) {
-        this.service = service;
-    }
+    @Autowired
+    private RecepcionFarmaciaMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<RecepcionFarmacia>> getAll() {
-        List<RecepcionFarmacia> lista = service.getAll();
+    public ResponseEntity<List<RecepcionFarmaciaResponseDTO>> getAll() {
+        List<RecepcionFarmaciaResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -33,28 +36,32 @@ public class RecepcionFarmaciaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RecepcionFarmacia> getById(@PathVariable Long id) {
-        return service.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<RecepcionFarmaciaResponseDTO> getById(@PathVariable Long id) {
+        RecepcionFarmacia entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(mapper.toResponseDTO(entity));
     }
 
     @PostMapping
-    public ResponseEntity<RecepcionFarmacia> create(@RequestBody RecepcionFarmacia entidad) {
+    public ResponseEntity<RecepcionFarmaciaResponseDTO> create(@RequestBody RecepcionFarmaciaRequestDTO dto) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+            RecepcionFarmacia nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RecepcionFarmacia> update(@PathVariable Long id, @RequestBody RecepcionFarmacia entidad) {
-        if (service.getById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<RecepcionFarmaciaResponseDTO> update(@PathVariable Long id, @RequestBody RecepcionFarmaciaRequestDTO dto) {
         try {
-            return ResponseEntity.ok(service.update(id, entidad));
+            RecepcionFarmacia actualizado = service.update(id, mapper.toEntity(dto));
+            if (actualizado == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -62,9 +69,11 @@ public class RecepcionFarmaciaController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.delete(id)) {
-            return ResponseEntity.noContent().build();
+        RecepcionFarmacia entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

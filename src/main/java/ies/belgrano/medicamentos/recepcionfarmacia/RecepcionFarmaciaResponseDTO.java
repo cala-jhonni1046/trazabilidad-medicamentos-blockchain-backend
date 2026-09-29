@@ -1,14 +1,10 @@
 package ies.belgrano.medicamentos.recepcionfarmacia;
 
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "recepciones_farmacia")
-public class RecepcionFarmacia extends BaseEntity {
+public class RecepcionFarmaciaResponseDTO {
 
+    private Long id;
     private String numeroComprobante;
     private LocalDateTime fechaHoraRecepcion;
     private String farmaciaCuit;
@@ -18,14 +14,18 @@ public class RecepcionFarmacia extends BaseEntity {
     private String estadoConformidad;
     private Boolean cadenaFrioIntacta;
     private String observaciones;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
-    public RecepcionFarmacia() {
+    public RecepcionFarmaciaResponseDTO() {
     }
 
-    public RecepcionFarmacia(String numeroComprobante, LocalDateTime fechaHoraRecepcion,
-                            String farmaciaCuit, String farmaciaNombre, String farmaceuticoResponsable,
-                            Long despachoLogisticoId, String estadoConformidad, Boolean cadenaFrioIntacta,
-                            String observaciones) {
+    public RecepcionFarmaciaResponseDTO(Long id, String numeroComprobante, LocalDateTime fechaHoraRecepcion,
+                                       String farmaciaCuit, String farmaciaNombre, String farmaceuticoResponsable,
+                                       Long despachoLogisticoId, String estadoConformidad, Boolean cadenaFrioIntacta,
+                                       String observaciones, LocalDateTime fechaCreacion,
+                                       LocalDateTime fechaActualizacion) {
+        this.id = id;
         this.numeroComprobante = numeroComprobante;
         this.fechaHoraRecepcion = fechaHoraRecepcion;
         this.farmaciaCuit = farmaciaCuit;
@@ -35,15 +35,16 @@ public class RecepcionFarmacia extends BaseEntity {
         this.estadoConformidad = estadoConformidad;
         this.cadenaFrioIntacta = cadenaFrioIntacta;
         this.observaciones = observaciones;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
     }
 
-    public RecepcionFarmacia(Long id, String numeroComprobante, LocalDateTime fechaHoraRecepcion,
-                            String farmaciaCuit, String farmaciaNombre, String farmaceuticoResponsable,
-                            Long despachoLogisticoId, String estadoConformidad, Boolean cadenaFrioIntacta,
-                            String observaciones) {
-        this(numeroComprobante, fechaHoraRecepcion, farmaciaCuit, farmaciaNombre, farmaceuticoResponsable,
-             despachoLogisticoId, estadoConformidad, cadenaFrioIntacta, observaciones);
-        this.setId(id);
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNumeroComprobante() {
@@ -116,5 +117,21 @@ public class RecepcionFarmacia extends BaseEntity {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
     }
 }

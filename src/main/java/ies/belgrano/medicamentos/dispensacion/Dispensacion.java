@@ -1,4 +1,4 @@
-package ies.belgrano.medicamentos.operaciones.dispensacion;
+package ies.belgrano.medicamentos.dispensacion;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;

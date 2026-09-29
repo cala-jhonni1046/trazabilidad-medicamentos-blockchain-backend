@@ -1,5 +1,6 @@
 package ies.belgrano.medicamentos.cuarentena;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,15 +18,17 @@ import java.util.List;
 @RequestMapping("/api/cuarentenas")
 public class CuarentenaController {
 
-    private final CuarentenaService service;
+    @Autowired
+    private CuarentenaService service;
 
-    public CuarentenaController(CuarentenaService service) {
-        this.service = service;
-    }
+    @Autowired
+    private CuarentenaMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<Cuarentena>> getAll() {
-        List<Cuarentena> lista = service.getAll();
+    public ResponseEntity<List<CuarentenaResponseDTO>> getAll() {
+        List<CuarentenaResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -33,28 +36,32 @@ public class CuarentenaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cuarentena> getById(@PathVariable Long id) {
-        return service.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<CuarentenaResponseDTO> getById(@PathVariable Long id) {
+        Cuarentena entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(mapper.toResponseDTO(entity));
     }
 
     @PostMapping
-    public ResponseEntity<Cuarentena> create(@RequestBody Cuarentena entidad) {
+    public ResponseEntity<CuarentenaResponseDTO> create(@RequestBody CuarentenaRequestDTO dto) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+            Cuarentena nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cuarentena> update(@PathVariable Long id, @RequestBody Cuarentena entidad) {
-        if (service.getById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CuarentenaResponseDTO> update(@PathVariable Long id, @RequestBody CuarentenaRequestDTO dto) {
         try {
-            return ResponseEntity.ok(service.update(id, entidad));
+            Cuarentena actualizado = service.update(id, mapper.toEntity(dto));
+            if (actualizado == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -62,9 +69,11 @@ public class CuarentenaController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.delete(id)) {
-            return ResponseEntity.noContent().build();
+        Cuarentena entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

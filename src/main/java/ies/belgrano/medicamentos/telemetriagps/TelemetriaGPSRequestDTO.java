@@ -1,16 +1,8 @@
 package ies.belgrano.medicamentos.telemetriagps;
 
-import ies.belgrano.medicamentos.despachologistico.DespachoLogistico;
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "telemetrias_gps")
-public class TelemetriaGPS extends BaseEntity {
+public class TelemetriaGPSRequestDTO {
 
     private String dispositivoGpsId;
     private Double latitud;
@@ -18,34 +10,23 @@ public class TelemetriaGPS extends BaseEntity {
     private Double altitud;
     private Double velocidad;
     private LocalDateTime fechaHora;
-
-    @ManyToOne
-    @JoinColumn(name = "despacho_logistico_id")
-    private DespachoLogistico despachoLogistico;
-
+    private Long despachoLogisticoId;
     private String direccionAproximada;
 
-    public TelemetriaGPS() {
+    public TelemetriaGPSRequestDTO() {
     }
 
-    public TelemetriaGPS(String dispositivoGpsId, Double latitud, Double longitud, Double altitud,
-                         Double velocidad, LocalDateTime fechaHora, DespachoLogistico despachoLogistico,
-                         String direccionAproximada) {
+    public TelemetriaGPSRequestDTO(String dispositivoGpsId, Double latitud, Double longitud, Double altitud,
+                                   Double velocidad, LocalDateTime fechaHora, Long despachoLogisticoId,
+                                   String direccionAproximada) {
         this.dispositivoGpsId = dispositivoGpsId;
         this.latitud = latitud;
         this.longitud = longitud;
         this.altitud = altitud;
         this.velocidad = velocidad;
         this.fechaHora = fechaHora;
-        this.despachoLogistico = despachoLogistico;
+        this.despachoLogisticoId = despachoLogisticoId;
         this.direccionAproximada = direccionAproximada;
-    }
-
-    public TelemetriaGPS(Long id, String dispositivoGpsId, Double latitud, Double longitud, Double altitud,
-                         Double velocidad, LocalDateTime fechaHora, DespachoLogistico despachoLogistico,
-                         String direccionAproximada) {
-        this(dispositivoGpsId, latitud, longitud, altitud, velocidad, fechaHora, despachoLogistico, direccionAproximada);
-        this.setId(id);
     }
 
     public String getDispositivoGpsId() {
@@ -96,12 +77,12 @@ public class TelemetriaGPS extends BaseEntity {
         this.fechaHora = fechaHora;
     }
 
-    public DespachoLogistico getDespachoLogistico() {
-        return despachoLogistico;
+    public Long getDespachoLogisticoId() {
+        return despachoLogisticoId;
     }
 
-    public void setDespachoLogistico(DespachoLogistico despachoLogistico) {
-        this.despachoLogistico = despachoLogistico;
+    public void setDespachoLogisticoId(Long despachoLogisticoId) {
+        this.despachoLogisticoId = despachoLogisticoId;
     }
 
     public String getDireccionAproximada() {

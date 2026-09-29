@@ -1,5 +1,6 @@
 package ies.belgrano.medicamentos.telemetriatemperatura;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,15 +18,17 @@ import java.util.List;
 @RequestMapping("/api/telemetrias-temperatura")
 public class TelemetriaTemperaturaController {
 
-    private final TelemetriaTemperaturaService service;
+    @Autowired
+    private TelemetriaTemperaturaService service;
 
-    public TelemetriaTemperaturaController(TelemetriaTemperaturaService service) {
-        this.service = service;
-    }
+    @Autowired
+    private TelemetriaTemperaturaMapper mapper;
 
     @GetMapping
-    public ResponseEntity<List<TelemetriaTemperatura>> getAll() {
-        List<TelemetriaTemperatura> lista = service.getAll();
+    public ResponseEntity<List<TelemetriaTemperaturaResponseDTO>> getAll() {
+        List<TelemetriaTemperaturaResponseDTO> lista = service.getAll().stream()
+                .map(mapper::toResponseDTO)
+                .toList();
         if (lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -33,28 +36,32 @@ public class TelemetriaTemperaturaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TelemetriaTemperatura> getById(@PathVariable Long id) {
-        return service.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<TelemetriaTemperaturaResponseDTO> getById(@PathVariable Long id) {
+        TelemetriaTemperatura entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(mapper.toResponseDTO(entity));
     }
 
     @PostMapping
-    public ResponseEntity<TelemetriaTemperatura> create(@RequestBody TelemetriaTemperatura entidad) {
+    public ResponseEntity<TelemetriaTemperaturaResponseDTO> create(@RequestBody TelemetriaTemperaturaRequestDTO dto) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.create(entidad));
+            TelemetriaTemperatura nuevo = service.create(mapper.toEntity(dto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TelemetriaTemperatura> update(@PathVariable Long id, @RequestBody TelemetriaTemperatura entidad) {
-        if (service.getById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<TelemetriaTemperaturaResponseDTO> update(@PathVariable Long id, @RequestBody TelemetriaTemperaturaRequestDTO dto) {
         try {
-            return ResponseEntity.ok(service.update(id, entidad));
+            TelemetriaTemperatura actualizado = service.update(id, mapper.toEntity(dto));
+            if (actualizado == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -62,9 +69,11 @@ public class TelemetriaTemperaturaController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.delete(id)) {
-            return ResponseEntity.noContent().build();
+        TelemetriaTemperatura entity = service.getById(id);
+        if (entity == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
