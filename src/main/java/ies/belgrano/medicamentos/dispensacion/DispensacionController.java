@@ -1,4 +1,4 @@
-package ies.belgrano.medicamentos.operaciones.dispensacion;
+package ies.belgrano.medicamentos.dispensacion;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
