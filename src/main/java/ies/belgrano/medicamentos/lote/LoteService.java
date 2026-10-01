@@ -24,7 +24,7 @@ public class LoteService {
 		return repo.save(lote);
 	}
 	
-	public Lote update(Lote lote, Long id) {
+	public Lote update(Long id, Lote lote) {
 		Lote actualizarLote = this.getById(id);
 		if(actualizarLote == null) {
 			return null;

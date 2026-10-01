@@ -24,7 +24,7 @@ public class MedicamentoService {
 		return repo.save(medicamento);
 	}
 	
-	public Medicamento update(Medicamento medicamento, Long id) {
+	public Medicamento update(Long id, Medicamento medicamento) {
 		Medicamento actualizarMedicamento = this.getById(id);
 		if(actualizarMedicamento == null) {
 			return null;
