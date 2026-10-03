@@ -24,7 +24,7 @@ public class UnidadTrazableService {
 		return repo.save(unidadTrazable);
 	}
 	
-	public UnidadTrazable update(UnidadTrazable unidadTrazable, Long id) {
+	public UnidadTrazable update(Long id, UnidadTrazable unidadTrazable) {
 		UnidadTrazable actualizarUnidadTrazable = this.getById(id);
 		if(actualizarUnidadTrazable == null) {
 			return null;

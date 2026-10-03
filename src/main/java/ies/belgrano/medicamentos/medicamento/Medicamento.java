@@ -1,24 +1,13 @@
 package ies.belgrano.medicamentos.medicamento;
 
+import ies.belgrano.medicamentos.utils.BaseEntity;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
 @Entity
-public class Medicamento {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+public class Medicamento extends BaseEntity {
 	private String nombre;
 	private String principioActivo;
 	private boolean requiereCadenaFrio;
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
 	public String getNombre() {
 		return nombre;
 	}
