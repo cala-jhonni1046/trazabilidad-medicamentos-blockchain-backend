@@ -6,21 +6,27 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "telemetrias_temperatura")
 public class TelemetriaTemperatura extends BaseEntity {
 
+    @Column(name = "sensor_id", nullable = false, length = 120)
     private String sensorId;
+    @Column(name = "temperatura_celsius", nullable = false)
     private Double temperatura;
+    @Column(name = "fecha_hora_utc", nullable = false)
     private LocalDateTime fechaHora;
+    @Column(name = "alerta_excursion")
     private Boolean alertaExcursion;
 
     @ManyToOne
     @JoinColumn(name = "despacho_logistico_id")
     private DespachoLogistico despachoLogistico;
 
+    @Column(name = "observaciones", length = 1000)
     private String observaciones;
 
     public TelemetriaTemperatura() {

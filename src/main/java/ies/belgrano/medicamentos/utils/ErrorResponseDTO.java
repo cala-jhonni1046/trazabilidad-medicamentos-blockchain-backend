@@ -1,77 +1,47 @@
 package ies.belgrano.medicamentos.utils;
 
+import java.time.Instant;
 import java.util.List;
 
 public class ErrorResponseDTO {
-
+    private Instant timestamp;
     private int status;
+    private String code;
     private String message;
-    private List<FieldError> errors;
+    private String path;
+    private List<FieldError> fieldErrors;
 
-    public ErrorResponseDTO() {
-    }
-
-    public ErrorResponseDTO(int status, String message) {
+    public ErrorResponseDTO() { }
+    public ErrorResponseDTO(Instant timestamp, int status, String code, String message, String path,
+            List<FieldError> fieldErrors) {
+        this.timestamp = timestamp;
         this.status = status;
+        this.code = code;
         this.message = message;
+        this.path = path;
+        this.fieldErrors = fieldErrors;
     }
-
-    public ErrorResponseDTO(int status, String message, List<FieldError> errors) {
-        this.status = status;
-        this.message = message;
-        this.errors = errors;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public List<FieldError> getErrors() {
-        return errors;
-    }
-
-    public void setErrors(List<FieldError> errors) {
-        this.errors = errors;
-    }
+    public Instant getTimestamp() { return timestamp; }
+    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
+    public int getStatus() { return status; }
+    public void setStatus(int status) { this.status = status; }
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    public String getPath() { return path; }
+    public void setPath(String path) { this.path = path; }
+    public List<FieldError> getFieldErrors() { return fieldErrors; }
+    public void setFieldErrors(List<FieldError> fieldErrors) { this.fieldErrors = fieldErrors; }
 
     public static class FieldError {
         private String field;
         private String message;
-
-        public FieldError() {
-        }
-
-        public FieldError(String field, String message) {
-            this.field = field;
-            this.message = message;
-        }
-
-        public String getField() {
-            return field;
-        }
-
-        public void setField(String field) {
-            this.field = field;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
+        public FieldError() { }
+        public FieldError(String field, String message) { this.field = field; this.message = message; }
+        public String getField() { return field; }
+        public void setField(String field) { this.field = field; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
     }
 }

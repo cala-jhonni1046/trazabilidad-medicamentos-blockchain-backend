@@ -3,12 +3,18 @@ package ies.belgrano.medicamentos.enlaceCUIT;
 import java.time.LocalDateTime;
 
 public class EnlaceCUITResponseDTO {
-
     private Long id;
-    private String nombreLaboratorio;
-    private String cuitLaboratorio;
-    private String cuitLogistica;
-    private String cuitFarmacia;
+    private Long laboratorioId;
+    private String laboratorioNombre;
+    private String laboratorioCuit;
+    private Long distribuidorId;
+    private String distribuidorNombre;
+    private String distribuidorCuit;
+    private Long farmaciaId;
+    private String farmaciaNombre;
+    private String farmaciaCuit;
+    private Long inspectorAprobadorId;
+    private String inspectorAprobadorNombre;
     private String numeroDisposicionANMAT;
     private String documentoCertificadoUrl;
     private EstadoEnlaceCuit estado;
@@ -16,123 +22,42 @@ public class EnlaceCUITResponseDTO {
     private LocalDateTime fechaAprobacionANMAT;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
-
-    public EnlaceCUITResponseDTO() {
-    }
-
-    public EnlaceCUITResponseDTO(Long id, String nombreLaboratorio, String cuitLaboratorio,
-                                String cuitLogistica, String cuitFarmacia,
-                                String numeroDisposicionANMAT, String documentoCertificadoUrl,
-                                EstadoEnlaceCuit estado, LocalDateTime fechaSolicitud,
-                                LocalDateTime fechaAprobacionANMAT,
-                                LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
-        this.id = id;
-        this.nombreLaboratorio = nombreLaboratorio;
-        this.cuitLaboratorio = cuitLaboratorio;
-        this.cuitLogistica = cuitLogistica;
-        this.cuitFarmacia = cuitFarmacia;
-        this.numeroDisposicionANMAT = numeroDisposicionANMAT;
-        this.documentoCertificadoUrl = documentoCertificadoUrl;
-        this.estado = estado;
-        this.fechaSolicitud = fechaSolicitud;
-        this.fechaAprobacionANMAT = fechaAprobacionANMAT;
-        this.fechaCreacion = fechaCreacion;
-        this.fechaActualizacion = fechaActualizacion;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNombreLaboratorio() {
-        return nombreLaboratorio;
-    }
-
-    public void setNombreLaboratorio(String nombreLaboratorio) {
-        this.nombreLaboratorio = nombreLaboratorio;
-    }
-
-    public String getCuitLaboratorio() {
-        return cuitLaboratorio;
-    }
-
-    public void setCuitLaboratorio(String cuitLaboratorio) {
-        this.cuitLaboratorio = cuitLaboratorio;
-    }
-
-    public String getCuitLogistica() {
-        return cuitLogistica;
-    }
-
-    public void setCuitLogistica(String cuitLogistica) {
-        this.cuitLogistica = cuitLogistica;
-    }
-
-    public String getCuitFarmacia() {
-        return cuitFarmacia;
-    }
-
-    public void setCuitFarmacia(String cuitFarmacia) {
-        this.cuitFarmacia = cuitFarmacia;
-    }
-
-    public String getNumeroDisposicionANMAT() {
-        return numeroDisposicionANMAT;
-    }
-
-    public void setNumeroDisposicionANMAT(String numeroDisposicionANMAT) {
-        this.numeroDisposicionANMAT = numeroDisposicionANMAT;
-    }
-
-    public String getDocumentoCertificadoUrl() {
-        return documentoCertificadoUrl;
-    }
-
-    public void setDocumentoCertificadoUrl(String documentoCertificadoUrl) {
-        this.documentoCertificadoUrl = documentoCertificadoUrl;
-    }
-
-    public EstadoEnlaceCuit getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoEnlaceCuit estado) {
-        this.estado = estado;
-    }
-
-    public LocalDateTime getFechaSolicitud() {
-        return fechaSolicitud;
-    }
-
-    public void setFechaSolicitud(LocalDateTime fechaSolicitud) {
-        this.fechaSolicitud = fechaSolicitud;
-    }
-
-    public LocalDateTime getFechaAprobacionANMAT() {
-        return fechaAprobacionANMAT;
-    }
-
-    public void setFechaAprobacionANMAT(LocalDateTime fechaAprobacionANMAT) {
-        this.fechaAprobacionANMAT = fechaAprobacionANMAT;
-    }
-
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
-
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
-
-    public LocalDateTime getFechaActualizacion() {
-        return fechaActualizacion;
-    }
-
-    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
-        this.fechaActualizacion = fechaActualizacion;
-    }
+    public Long getId() { return id; }
+    public void setId(Long value) { this.id = value; }
+    public Long getLaboratorioId() { return laboratorioId; }
+    public void setLaboratorioId(Long value) { this.laboratorioId = value; }
+    public String getLaboratorioNombre() { return laboratorioNombre; }
+    public void setLaboratorioNombre(String value) { this.laboratorioNombre = value; }
+    public String getLaboratorioCuit() { return laboratorioCuit; }
+    public void setLaboratorioCuit(String value) { this.laboratorioCuit = value; }
+    public Long getDistribuidorId() { return distribuidorId; }
+    public void setDistribuidorId(Long value) { this.distribuidorId = value; }
+    public String getDistribuidorNombre() { return distribuidorNombre; }
+    public void setDistribuidorNombre(String value) { this.distribuidorNombre = value; }
+    public String getDistribuidorCuit() { return distribuidorCuit; }
+    public void setDistribuidorCuit(String value) { this.distribuidorCuit = value; }
+    public Long getFarmaciaId() { return farmaciaId; }
+    public void setFarmaciaId(Long value) { this.farmaciaId = value; }
+    public String getFarmaciaNombre() { return farmaciaNombre; }
+    public void setFarmaciaNombre(String value) { this.farmaciaNombre = value; }
+    public String getFarmaciaCuit() { return farmaciaCuit; }
+    public void setFarmaciaCuit(String value) { this.farmaciaCuit = value; }
+    public Long getInspectorAprobadorId() { return inspectorAprobadorId; }
+    public void setInspectorAprobadorId(Long value) { this.inspectorAprobadorId = value; }
+    public String getInspectorAprobadorNombre() { return inspectorAprobadorNombre; }
+    public void setInspectorAprobadorNombre(String value) { this.inspectorAprobadorNombre = value; }
+    public String getNumeroDisposicionANMAT() { return numeroDisposicionANMAT; }
+    public void setNumeroDisposicionANMAT(String value) { this.numeroDisposicionANMAT = value; }
+    public String getDocumentoCertificadoUrl() { return documentoCertificadoUrl; }
+    public void setDocumentoCertificadoUrl(String value) { this.documentoCertificadoUrl = value; }
+    public EstadoEnlaceCuit getEstado() { return estado; }
+    public void setEstado(EstadoEnlaceCuit value) { this.estado = value; }
+    public LocalDateTime getFechaSolicitud() { return fechaSolicitud; }
+    public void setFechaSolicitud(LocalDateTime value) { this.fechaSolicitud = value; }
+    public LocalDateTime getFechaAprobacionANMAT() { return fechaAprobacionANMAT; }
+    public void setFechaAprobacionANMAT(LocalDateTime value) { this.fechaAprobacionANMAT = value; }
+    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(LocalDateTime value) { this.fechaCreacion = value; }
+    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
+    public void setFechaActualizacion(LocalDateTime value) { this.fechaActualizacion = value; }
 }

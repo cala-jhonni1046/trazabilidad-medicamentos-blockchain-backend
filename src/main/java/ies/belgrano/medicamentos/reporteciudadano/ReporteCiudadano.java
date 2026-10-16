@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import java.time.LocalDateTime;
 
@@ -15,51 +18,31 @@ import ies.belgrano.medicamentos.utils.BaseEntity;
 @Table(name = "reportes_ciudadanos")
 public class ReporteCiudadano extends BaseEntity {
 
-    private String codigoQRAfectado;
-
-    private String inspectorAsignado;
-
+    @Column(name = "motivo_reporte", nullable = false, length = 1000)
     private String motivoReporte;
-
+    @Column(name = "fecha_hora_reporte_utc", nullable = false)
     private LocalDateTime fechaHoraReporte;
-
-    private String estadoAuditoria;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false, length = 24)
+    private EstadoReporte estado = EstadoReporte.PENDIENTE;
 
     @ManyToOne
-    @JoinColumn(name = "unidad_trazable_id", nullable = true)
+    @JoinColumn(name = "unidad_trazable_id")
     private UnidadTrazable unidadTrazable;
 
     @ManyToOne
-    @JoinColumn(name = "inspector_id", nullable = true)
+    @JoinColumn(name = "inspector_anmat_id")
     private InspectorANMAT inspector;
 
     public ReporteCiudadano() {
     }
 
-    public ReporteCiudadano(String codigoQRAfectado, String inspectorAsignado, String motivoReporte, LocalDateTime fechaHoraReporte, String estadoAuditoria, UnidadTrazable unidadTrazable, InspectorANMAT inspector) {
-        this.codigoQRAfectado = codigoQRAfectado;
-        this.inspectorAsignado = inspectorAsignado;
+    public ReporteCiudadano(String motivoReporte, LocalDateTime fechaHoraReporte, EstadoReporte estado, UnidadTrazable unidadTrazable, InspectorANMAT inspector) {
         this.motivoReporte = motivoReporte;
         this.fechaHoraReporte = fechaHoraReporte;
-        this.estadoAuditoria = estadoAuditoria;
+        this.estado = estado;
         this.unidadTrazable = unidadTrazable;
         this.inspector = inspector;
-    }
-
-    public String getCodigoQRAfectado() {
-        return codigoQRAfectado;
-    }
-
-    public void setCodigoQRAfectado(String codigoQRAfectado) {
-        this.codigoQRAfectado = codigoQRAfectado;
-    }
-
-    public String getInspectorAsignado() {
-        return inspectorAsignado;
-    }
-
-    public void setInspectorAsignado(String inspectorAsignado) {
-        this.inspectorAsignado = inspectorAsignado;
     }
 
     public String getMotivoReporte() {
@@ -78,12 +61,12 @@ public class ReporteCiudadano extends BaseEntity {
         this.fechaHoraReporte = fechaHoraReporte;
     }
 
-    public String getEstadoAuditoria() {
-        return estadoAuditoria;
+    public EstadoReporte getEstado() {
+        return estado;
     }
 
-    public void setEstadoAuditoria(String estadoAuditoria) {
-        this.estadoAuditoria = estadoAuditoria;
+    public void setEstado(EstadoReporte estado) {
+        this.estado = estado;
     }
 
     public UnidadTrazable getUnidadTrazable() {

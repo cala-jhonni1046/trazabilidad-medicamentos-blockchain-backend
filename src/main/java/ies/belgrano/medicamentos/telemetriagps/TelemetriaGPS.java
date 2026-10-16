@@ -6,23 +6,31 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "telemetrias_gps")
 public class TelemetriaGPS extends BaseEntity {
 
+    @Column(name = "dispositivo_gps_id", length = 120)
     private String dispositivoGpsId;
+    @Column(name = "latitud")
     private Double latitud;
+    @Column(name = "longitud")
     private Double longitud;
+    @Column(name = "altitud_metros")
     private Double altitud;
+    @Column(name = "velocidad")
     private Double velocidad;
+    @Column(name = "fecha_hora_utc", nullable = false)
     private LocalDateTime fechaHora;
 
     @ManyToOne
     @JoinColumn(name = "despacho_logistico_id")
     private DespachoLogistico despachoLogistico;
 
+    @Column(name = "direccion_aproximada", length = 240)
     private String direccionAproximada;
 
     public TelemetriaGPS() {

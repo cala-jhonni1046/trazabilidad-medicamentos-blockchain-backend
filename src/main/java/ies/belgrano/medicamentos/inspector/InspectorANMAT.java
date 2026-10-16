@@ -9,21 +9,31 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 @Entity
+@Table(name = "inspectores_anmat")
 public class InspectorANMAT extends BaseEntity {
 	
 	@OneToOne
 	@JoinColumn(name = "usuario_id", nullable = false, unique = true)
 	private Usuario usuario;
 	
+	@Column(name = "dni", length = 16)
 	private String dni;
+	@Column(name = "legajo_oficial", unique = true, length = 80)
 	private String legajoOficial;
+	@Column(name = "nombre_completo", nullable = false, length = 160)
 	private String nombreCompleto;
+	@Column(name = "email_institucional", length = 180)
 	private String emailInstitucional;
+	@Column(name = "fecha_hora_alta_utc")
 	private LocalDateTime fechaHoraAlta;
+	@Column(name = "jefe_autorizador", length = 160)
 	private String jefeAutorizador;
 	@Enumerated(EnumType.STRING)
+	@Column(name = "estado", nullable = false, length = 24)
 	private EstadoInspector estado;
 	
 	public Usuario getUsuario() {
