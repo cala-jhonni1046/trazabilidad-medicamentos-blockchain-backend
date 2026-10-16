@@ -2,6 +2,7 @@ package ies.belgrano.medicamentos.dispensacion;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
@@ -9,33 +10,37 @@ import java.time.LocalDateTime;
 
 import ies.belgrano.medicamentos.unidadTrazable.UnidadTrazable;
 import ies.belgrano.medicamentos.utils.BaseEntity;
+import ies.belgrano.medicamentos.organizacion.Organizacion;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "dispensaciones")
 public class Dispensacion extends BaseEntity {
 
+    @Column(name = "receta_numero", length = 100)
     private String recetaNumero;
 
-    private String codigoQR;
-
+    @Column(name = "dni_paciente", length = 16)
     private String dniPaciente;
 
-    private String farmaciaCuit;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "farmacia_id", nullable = false)
+    private Organizacion farmacia;
 
+    @Column(name = "fecha_dispensacion_utc", nullable = false)
     private LocalDateTime fechaDispensacion;
 
     @OneToOne
-    @JoinColumn(name = "unidad_trazable_id", unique = true, nullable = true)
+    @JoinColumn(name = "unidad_trazable_id", unique = true, nullable = false)
     private UnidadTrazable unidadTrazable;
 
     public Dispensacion() {
     }
 
-    public Dispensacion(String recetaNumero, String codigoQR, String dniPaciente, String farmaciaCuit, LocalDateTime fechaDispensacion, UnidadTrazable unidadTrazable) {
+    public Dispensacion(String recetaNumero, String dniPaciente, Organizacion farmacia, LocalDateTime fechaDispensacion, UnidadTrazable unidadTrazable) {
         this.recetaNumero = recetaNumero;
-        this.codigoQR = codigoQR;
         this.dniPaciente = dniPaciente;
-        this.farmaciaCuit = farmaciaCuit;
+        this.farmacia = farmacia;
         this.fechaDispensacion = fechaDispensacion;
         this.unidadTrazable = unidadTrazable;
     }
@@ -48,14 +53,6 @@ public class Dispensacion extends BaseEntity {
         this.recetaNumero = recetaNumero;
     }
 
-    public String getCodigoQR() {
-        return codigoQR;
-    }
-
-    public void setCodigoQR(String codigoQR) {
-        this.codigoQR = codigoQR;
-    }
-
     public String getDniPaciente() {
         return dniPaciente;
     }
@@ -64,13 +61,8 @@ public class Dispensacion extends BaseEntity {
         this.dniPaciente = dniPaciente;
     }
 
-    public String getFarmaciaCuit() {
-        return farmaciaCuit;
-    }
-
-    public void setFarmaciaCuit(String farmaciaCuit) {
-        this.farmaciaCuit = farmaciaCuit;
-    }
+    public Organizacion getFarmacia() { return farmacia; }
+    public void setFarmacia(Organizacion farmacia) { this.farmacia = farmacia; }
 
     public LocalDateTime getFechaDispensacion() {
         return fechaDispensacion;

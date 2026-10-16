@@ -4,14 +4,19 @@ import ies.belgrano.medicamentos.utils.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Column;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "usuarios")
 public class Usuario extends BaseEntity {
 
+	@Column(name = "email", nullable = false, unique = true, length = 180)
 	private String email;
-	private String passwordHash;
 	@Enumerated(EnumType.STRING)
+	@Column(name = "rol", nullable = false, length = 24)
 	private RolUsuario rol;
+	@Column(name = "activo", nullable = false)
 	private boolean activo;
 
 	public String getEmail() {
@@ -20,14 +25,6 @@ public class Usuario extends BaseEntity {
 
 	public void setEmail(String email) {
 		this.email = email;
-	}
-
-	public String getPasswordHash() {
-		return passwordHash;
-	}
-
-	public void setPasswordHash(String passwordHash) {
-		this.passwordHash = passwordHash;
 	}
 
 	public RolUsuario getRol() {

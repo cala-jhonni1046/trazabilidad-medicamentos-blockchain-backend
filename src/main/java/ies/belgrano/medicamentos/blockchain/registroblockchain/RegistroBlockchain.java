@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 import java.time.LocalDateTime;
 
@@ -13,16 +14,22 @@ import ies.belgrano.medicamentos.utils.BaseEntity;
 
 @Entity
 @Table(name = "registros_blockchain")
+/** Academic simulation metadata only; this entity does not connect to a blockchain network. */
 public class RegistroBlockchain extends BaseEntity {
 
+    @Column(name = "transaction_hash", length = 128)
     private String transactionHash;
 
+    @Column(name = "numero_bloque")
     private Long bloque;
 
+    @Column(name = "firma_inspector_anmat", length = 512)
     private String firmaInspectorANMAT;
 
+    @Column(name = "fecha_hora_utc")
     private LocalDateTime timestamp;
 
+    @Column(name = "confirmado")
     private Boolean confirmado;
 
     @ManyToOne

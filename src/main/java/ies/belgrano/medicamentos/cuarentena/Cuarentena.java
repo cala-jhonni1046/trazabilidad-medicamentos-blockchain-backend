@@ -1,138 +1,59 @@
 package ies.belgrano.medicamentos.cuarentena;
 
-import ies.belgrano.medicamentos.utils.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+
+import ies.belgrano.medicamentos.inspector.InspectorANMAT;
+import ies.belgrano.medicamentos.lote.Lote;
+import ies.belgrano.medicamentos.utils.BaseEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "cuarentenas")
 public class Cuarentena extends BaseEntity {
-
+    @Column(name = "codigo_cuarentena", nullable = false, unique = true, length = 80)
     private String codigoCuarentena;
+    @Column(name = "fecha_inicio", nullable = false)
     private LocalDateTime fechaInicio;
+    @Column(name = "fecha_fin")
     private LocalDateTime fechaFin;
+    @Column(name = "motivo", nullable = false, length = 500)
     private String motivo;
-    private String estado;
-    private String responsable;
-    private String ubicacionFisica;
-    private Long loteId;
-    private Long unidadTrazableId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false, length = 24)
+    private EstadoCuarentena estado = EstadoCuarentena.ABIERTA;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "lote_id", nullable = false)
+    private Lote lote;
+    @ManyToOne
+    @JoinColumn(name = "inspector_anmat_id")
+    private InspectorANMAT inspectorResponsable;
+    @Column(name = "resolucion_final", length = 500)
     private String resolucionFinal;
+    @Column(name = "observaciones", length = 1000)
     private String observaciones;
 
-    public Cuarentena() {
-    }
-
-    public Cuarentena(String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
-            String motivo, String estado, String responsable, String ubicacionFisica,
-            Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones) {
-        this.codigoCuarentena = codigoCuarentena;
-        this.fechaInicio = fechaInicio;
-        this.fechaFin = fechaFin;
-        this.motivo = motivo;
-        this.estado = estado;
-        this.responsable = responsable;
-        this.ubicacionFisica = ubicacionFisica;
-        this.loteId = loteId;
-        this.unidadTrazableId = unidadTrazableId;
-        this.resolucionFinal = resolucionFinal;
-        this.observaciones = observaciones;
-    }
-
-    public Cuarentena(Long id, String codigoCuarentena, LocalDateTime fechaInicio, LocalDateTime fechaFin,
-            String motivo, String estado, String responsable, String ubicacionFisica,
-            Long loteId, Long unidadTrazableId, String resolucionFinal, String observaciones) {
-        this(codigoCuarentena, fechaInicio, fechaFin, motivo, estado, responsable, ubicacionFisica,
-             loteId, unidadTrazableId, resolucionFinal, observaciones);
-        this.setId(id);
-    }
-
-    public String getCodigoCuarentena() {
-        return codigoCuarentena;
-    }
-
-    public void setCodigoCuarentena(String codigoCuarentena) {
-        this.codigoCuarentena = codigoCuarentena;
-    }
-
-    public LocalDateTime getFechaInicio() {
-        return fechaInicio;
-    }
-
-    public void setFechaInicio(LocalDateTime fechaInicio) {
-        this.fechaInicio = fechaInicio;
-    }
-
-    public LocalDateTime getFechaFin() {
-        return fechaFin;
-    }
-
-    public void setFechaFin(LocalDateTime fechaFin) {
-        this.fechaFin = fechaFin;
-    }
-
-    public String getMotivo() {
-        return motivo;
-    }
-
-    public void setMotivo(String motivo) {
-        this.motivo = motivo;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
-    public String getResponsable() {
-        return responsable;
-    }
-
-    public void setResponsable(String responsable) {
-        this.responsable = responsable;
-    }
-
-    public String getUbicacionFisica() {
-        return ubicacionFisica;
-    }
-
-    public void setUbicacionFisica(String ubicacionFisica) {
-        this.ubicacionFisica = ubicacionFisica;
-    }
-
-    public Long getLoteId() {
-        return loteId;
-    }
-
-    public void setLoteId(Long loteId) {
-        this.loteId = loteId;
-    }
-
-    public Long getUnidadTrazableId() {
-        return unidadTrazableId;
-    }
-
-    public void setUnidadTrazableId(Long unidadTrazableId) {
-        this.unidadTrazableId = unidadTrazableId;
-    }
-
-    public String getResolucionFinal() {
-        return resolucionFinal;
-    }
-
-    public void setResolucionFinal(String resolucionFinal) {
-        this.resolucionFinal = resolucionFinal;
-    }
-
-    public String getObservaciones() {
-        return observaciones;
-    }
-
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
-    }
+    public String getCodigoCuarentena() { return codigoCuarentena; }
+    public void setCodigoCuarentena(String value) { this.codigoCuarentena = value; }
+    public LocalDateTime getFechaInicio() { return fechaInicio; }
+    public void setFechaInicio(LocalDateTime value) { this.fechaInicio = value; }
+    public LocalDateTime getFechaFin() { return fechaFin; }
+    public void setFechaFin(LocalDateTime value) { this.fechaFin = value; }
+    public String getMotivo() { return motivo; }
+    public void setMotivo(String value) { this.motivo = value; }
+    public EstadoCuarentena getEstado() { return estado; }
+    public void setEstado(EstadoCuarentena value) { this.estado = value; }
+    public Lote getLote() { return lote; }
+    public void setLote(Lote value) { this.lote = value; }
+    public InspectorANMAT getInspectorResponsable() { return inspectorResponsable; }
+    public void setInspectorResponsable(InspectorANMAT value) { this.inspectorResponsable = value; }
+    public String getResolucionFinal() { return resolucionFinal; }
+    public void setResolucionFinal(String value) { this.resolucionFinal = value; }
+    public String getObservaciones() { return observaciones; }
+    public void setObservaciones(String value) { this.observaciones = value; }
 }
