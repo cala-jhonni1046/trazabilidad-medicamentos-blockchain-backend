@@ -5,4 +5,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DespachoLogisticoRepository extends JpaRepository<DespachoLogistico, Long> {
+
+    boolean existsByLoteId(Long loteId);
 }
+
