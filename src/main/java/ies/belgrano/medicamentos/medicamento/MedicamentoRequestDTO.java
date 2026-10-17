@@ -1,9 +1,20 @@
 package ies.belgrano.medicamentos.medicamento;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class MedicamentoRequestDTO {
 
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 180, message = "El nombre no puede exceder los 180 caracteres")
     private String nombre;
+
+    @NotBlank(message = "El principio activo es obligatorio")
+    @Size(max = 180, message = "El principio activo no puede exceder los 180 caracteres")
     private String principioActivo;
+
+    @NotNull(message = "El campo requiereCadenaFrio es obligatorio")
     private Boolean requiereCadenaFrio;
 
     public MedicamentoRequestDTO() {
@@ -39,3 +50,4 @@ public class MedicamentoRequestDTO {
         this.requiereCadenaFrio = requiereCadenaFrio;
     }
 }
+

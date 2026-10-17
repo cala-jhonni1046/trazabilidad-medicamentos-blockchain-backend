@@ -24,7 +24,7 @@ public class LoteMapper {
         entity.setTempMin(dto.getTempMin());
         entity.setTempMax(dto.getTempMax());
         entity.setFechaHoraFabricacion(dto.getFechaHoraFabricacion());
-        entity.setEstado(dto.getEstado());
+        entity.setEstado(EstadoLote.CREADO);
         return entity;
     }
 
