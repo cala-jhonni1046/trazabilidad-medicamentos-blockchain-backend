@@ -2,16 +2,32 @@ package ies.belgrano.medicamentos.enlaceCUIT;
 
 import java.time.LocalDateTime;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class EnlaceCUITRequestDTO {
+
+    @NotNull(message = "El ID de laboratorio es obligatorio")
     private Long laboratorioId;
+
+    @NotNull(message = "El ID de distribuidor es obligatorio")
     private Long distribuidorId;
+
+    @NotNull(message = "El ID de farmacia es obligatorio")
     private Long farmaciaId;
+
     private Long inspectorAprobadorId;
+
+    @Size(max = 80, message = "El número de disposición ANMAT no puede superar los 80 caracteres")
     private String numeroDisposicionANMAT;
+
+    @Size(max = 500, message = "La URL del certificado no puede superar los 500 caracteres")
     private String documentoCertificadoUrl;
+
     private EstadoEnlaceCuit estado;
     private LocalDateTime fechaSolicitud;
     private LocalDateTime fechaAprobacionANMAT;
+
     public Long getLaboratorioId() { return laboratorioId; }
     public void setLaboratorioId(Long value) { this.laboratorioId = value; }
     public Long getDistribuidorId() { return distribuidorId; }
