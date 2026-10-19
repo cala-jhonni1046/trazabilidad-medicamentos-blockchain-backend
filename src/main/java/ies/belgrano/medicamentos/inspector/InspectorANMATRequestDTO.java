@@ -2,15 +2,35 @@ package ies.belgrano.medicamentos.inspector;
 
 import java.time.LocalDateTime;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class InspectorANMATRequestDTO {
 
+    @NotNull(message = "El usuarioId es obligatorio.")
     private Long usuarioId;
+
+    @Size(max = 16, message = "El DNI no debe superar los 16 caracteres.")
     private String dni;
+
+    @Size(max = 80, message = "El legajo oficial no debe superar los 80 caracteres.")
     private String legajoOficial;
+
+    @NotBlank(message = "El nombre completo es obligatorio.")
+    @Size(max = 160, message = "El nombre completo no debe superar los 160 caracteres.")
     private String nombreCompleto;
+
+    @Size(max = 180, message = "El email institucional no debe superar los 180 caracteres.")
+    @Email(message = "El formato de email institucional no es válido.")
     private String emailInstitucional;
+
     private LocalDateTime fechaHoraAlta;
+
+    @Size(max = 160, message = "El jefe autorizador no debe superar los 160 caracteres.")
     private String jefeAutorizador;
+
     private EstadoInspector estado;
 
     public InspectorANMATRequestDTO() {

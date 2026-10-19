@@ -10,7 +10,11 @@ public class UsuarioMapper {
             return null;
         }
         Usuario entity = new Usuario();
-        copyToEntity(dto, entity);
+        if (dto.getEmail() != null) {
+            entity.setEmail(dto.getEmail().trim().toLowerCase());
+        }
+        entity.setRol(dto.getRol());
+        entity.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
         return entity;
     }
 
@@ -18,8 +22,12 @@ public class UsuarioMapper {
         if (dto == null || entity == null) {
             return;
         }
-        entity.setEmail(dto.getEmail());
-        entity.setRol(dto.getRol());
+        if (dto.getEmail() != null) {
+            entity.setEmail(dto.getEmail().trim().toLowerCase());
+        }
+        if (dto.getRol() != null) {
+            entity.setRol(dto.getRol());
+        }
         if (dto.getActivo() != null) {
             entity.setActivo(dto.getActivo());
         }

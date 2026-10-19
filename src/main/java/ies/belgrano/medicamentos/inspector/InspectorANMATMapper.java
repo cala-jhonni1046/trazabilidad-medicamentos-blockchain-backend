@@ -1,34 +1,54 @@
 package ies.belgrano.medicamentos.inspector;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ies.belgrano.medicamentos.usuario.Usuario;
-import ies.belgrano.medicamentos.usuario.UsuarioRepository;
 
 @Component
 public class InspectorANMATMapper {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    public InspectorANMAT toEntity(InspectorANMATRequestDTO dto) {
+    public InspectorANMAT toEntity(InspectorANMATRequestDTO dto, Usuario usuario) {
         if (dto == null) {
             return null;
         }
         InspectorANMAT entity = new InspectorANMAT();
-        if (dto.getUsuarioId() != null) {
-            Usuario usuario = usuarioRepository.findById(dto.getUsuarioId()).orElse(null);
+        entity.setUsuario(usuario);
+        copyFields(dto, entity);
+        return entity;
+    }
+
+    public void copyToEntity(InspectorANMATRequestDTO dto, InspectorANMAT entity, Usuario usuario) {
+        if (dto == null || entity == null) {
+            return;
+        }
+        if (usuario != null) {
             entity.setUsuario(usuario);
         }
-        entity.setDni(dto.getDni());
-        entity.setLegajoOficial(dto.getLegajoOficial());
-        entity.setNombreCompleto(dto.getNombreCompleto());
-        entity.setEmailInstitucional(dto.getEmailInstitucional());
-        entity.setFechaHoraAlta(dto.getFechaHoraAlta());
-        entity.setJefeAutorizador(dto.getJefeAutorizador());
-        entity.setEstado(dto.getEstado());
-        return entity;
+        copyFields(dto, entity);
+    }
+
+    private void copyFields(InspectorANMATRequestDTO dto, InspectorANMAT entity) {
+        if (dto.getDni() != null) {
+            entity.setDni(dto.getDni().trim());
+        }
+        if (dto.getLegajoOficial() != null) {
+            entity.setLegajoOficial(dto.getLegajoOficial().trim());
+        }
+        if (dto.getNombreCompleto() != null) {
+            entity.setNombreCompleto(dto.getNombreCompleto().trim());
+        }
+        if (dto.getEmailInstitucional() != null) {
+            entity.setEmailInstitucional(dto.getEmailInstitucional().trim().toLowerCase());
+        }
+        if (dto.getFechaHoraAlta() != null) {
+            entity.setFechaHoraAlta(dto.getFechaHoraAlta());
+        }
+        if (dto.getJefeAutorizador() != null) {
+            entity.setJefeAutorizador(dto.getJefeAutorizador().trim());
+        }
+        if (dto.getEstado() != null) {
+            entity.setEstado(dto.getEstado());
+        }
     }
 
     public InspectorANMATResponseDTO toResponseDTO(InspectorANMAT entity) {
