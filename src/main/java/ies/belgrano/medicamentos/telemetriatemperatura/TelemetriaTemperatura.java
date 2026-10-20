@@ -22,8 +22,8 @@ public class TelemetriaTemperatura extends BaseEntity {
     @Column(name = "alerta_excursion")
     private Boolean alertaExcursion;
 
-    @ManyToOne
-    @JoinColumn(name = "despacho_logistico_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "despacho_logistico_id", nullable = false)
     private DespachoLogistico despachoLogistico;
 
     @Column(name = "observaciones", length = 1000)
