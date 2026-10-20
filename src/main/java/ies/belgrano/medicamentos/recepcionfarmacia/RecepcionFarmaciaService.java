@@ -102,6 +102,11 @@ public class RecepcionFarmaciaService {
             throw new IllegalStateException("Solo se puede registrar la recepción de un despacho en estado EN_TRANSITO. Estado actual: " + despacho.getEstado());
         }
 
+        if (despacho.getLote() != null && despacho.getLote().getEstado() == EstadoLote.EN_CUARENTENA) {
+            throw new IllegalStateException("No es posible registrar la recepción en farmacia porque el lote "
+                    + despacho.getLote().getCodigoLote() + " se encuentra EN_CUARENTENA.");
+        }
+
         EnlaceCUIT enlace = despacho.getEnlaceCuit();
         if (enlace == null || enlace.getEstado() != EstadoEnlaceCuit.ACTIVO) {
             String estadoEnlace = (enlace != null && enlace.getEstado() != null) ? enlace.getEstado().name() : "INEXISTENTE";
