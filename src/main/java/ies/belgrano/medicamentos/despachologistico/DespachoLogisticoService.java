@@ -351,7 +351,8 @@ public class DespachoLogisticoService {
         return registrarEventoInterno(despacho, dto.getTipo(), fechaHora, actor, dto.getDescripcion());
     }
 
-    private EventoCustodia registrarEventoInterno(DespachoLogistico despacho,
+    @Transactional
+    public EventoCustodia registrarEventoInterno(DespachoLogistico despacho,
                                                  TipoEventoCustodia tipo,
                                                  LocalDateTime fechaHora,
                                                  Organizacion actor,
