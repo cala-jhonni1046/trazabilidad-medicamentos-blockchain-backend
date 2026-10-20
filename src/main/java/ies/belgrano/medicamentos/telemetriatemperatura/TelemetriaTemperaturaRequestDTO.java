@@ -2,13 +2,36 @@ package ies.belgrano.medicamentos.telemetriatemperatura;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class TelemetriaTemperaturaRequestDTO {
 
+    @NotBlank(message = "El identificador del sensor es obligatorio")
+    @Size(max = 120, message = "El identificador del sensor no puede superar los 120 caracteres")
     private String sensorId;
+
+    @NotNull(message = "La temperatura es obligatoria")
     private Double temperatura;
+
+    @NotNull(message = "La fecha y hora de la lectura es obligatoria")
     private LocalDateTime fechaHora;
+
+    /**
+     * Campo informativo. La alerta de excursión es determinada estrictamente por el servidor
+     * comparando el valor térmico contra los límites del lote. Si el cliente envía este campo,
+     * el backend lo ignora y sobreescribe con el cálculo oficial.
+     */
     private Boolean alertaExcursion;
+
+    @NotNull(message = "El ID de despacho logístico es obligatorio")
+    @JsonAlias({"despachoId"})
     private Long despachoLogisticoId;
+
+    @Size(max = 1000, message = "Las observaciones no pueden superar los 1000 caracteres")
     private String observaciones;
 
     public TelemetriaTemperaturaRequestDTO() {
@@ -64,6 +87,12 @@ public class TelemetriaTemperaturaRequestDTO {
         this.despachoLogisticoId = despachoLogisticoId;
     }
 
+    public void setDespachoId(Long despachoId) {
+        if (this.despachoLogisticoId == null) {
+            this.despachoLogisticoId = despachoId;
+        }
+    }
+
     public String getObservaciones() {
         return observaciones;
     }
@@ -72,3 +101,4 @@ public class TelemetriaTemperaturaRequestDTO {
         this.observaciones = observaciones;
     }
 }
+

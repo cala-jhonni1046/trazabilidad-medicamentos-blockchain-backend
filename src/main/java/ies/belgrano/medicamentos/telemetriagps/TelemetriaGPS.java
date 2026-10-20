@@ -26,8 +26,8 @@ public class TelemetriaGPS extends BaseEntity {
     @Column(name = "fecha_hora_utc", nullable = false)
     private LocalDateTime fechaHora;
 
-    @ManyToOne
-    @JoinColumn(name = "despacho_logistico_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "despacho_logistico_id", nullable = false)
     private DespachoLogistico despachoLogistico;
 
     @Column(name = "direccion_aproximada", length = 240)

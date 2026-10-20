@@ -2,15 +2,38 @@ package ies.belgrano.medicamentos.telemetriagps;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class TelemetriaGPSRequestDTO {
 
+    @Size(max = 120, message = "El identificador del dispositivo GPS no puede superar los 120 caracteres")
     private String dispositivoGpsId;
+
+    @DecimalMin(value = "-90.0", message = "La latitud debe estar comprendida entre -90 y 90 grados")
+    @DecimalMax(value = "90.0", message = "La latitud debe estar comprendida entre -90 y 90 grados")
     private Double latitud;
+
+    @DecimalMin(value = "-180.0", message = "La longitud debe estar comprendida entre -180 y 180 grados")
+    @DecimalMax(value = "180.0", message = "La longitud debe estar comprendida entre -180 y 180 grados")
     private Double longitud;
+
     private Double altitud;
+
     private Double velocidad;
+
+    @NotNull(message = "La fecha y hora de la lectura es obligatoria")
     private LocalDateTime fechaHora;
+
+    @NotNull(message = "El ID de despacho logístico es obligatorio")
+    @JsonAlias({"despachoId"})
     private Long despachoLogisticoId;
+
+    @Size(max = 240, message = "La dirección aproximada no puede superar los 240 caracteres")
     private String direccionAproximada;
 
     public TelemetriaGPSRequestDTO() {
@@ -85,6 +108,12 @@ public class TelemetriaGPSRequestDTO {
         this.despachoLogisticoId = despachoLogisticoId;
     }
 
+    public void setDespachoId(Long despachoId) {
+        if (this.despachoLogisticoId == null) {
+            this.despachoLogisticoId = despachoId;
+        }
+    }
+
     public String getDireccionAproximada() {
         return direccionAproximada;
     }
@@ -93,3 +122,4 @@ public class TelemetriaGPSRequestDTO {
         this.direccionAproximada = direccionAproximada;
     }
 }
+
