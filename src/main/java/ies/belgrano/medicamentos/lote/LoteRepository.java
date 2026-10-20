@@ -15,5 +15,9 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
     boolean existsByMedicamentoId(Long medicamentoId);
 
     List<Lote> findByMedicamentoId(Long medicamentoId);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT l FROM Lote l WHERE l.id = :id")
+    java.util.Optional<Lote> findByIdWithLock(@org.springframework.data.repository.query.Param("id") Long id);
 }
 
