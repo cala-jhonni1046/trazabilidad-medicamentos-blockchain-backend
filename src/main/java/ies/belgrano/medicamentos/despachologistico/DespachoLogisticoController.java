@@ -1,5 +1,7 @@
 package ies.belgrano.medicamentos.despachologistico;
 
+import io.swagger.v3.oas.annotations.Operation;
+
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -71,6 +73,7 @@ public class DespachoLogisticoController {
     }
 
     @PostMapping(path = { "/{id}/entregar", "/{id}/recibir" })
+    @Operation(summary = "Cierre directo deshabilitado", description = "Ruta conservada por compatibilidad: devuelve 409. Registrar la recepción mediante POST /api/recepciones-farmacia.")
     public ResponseEntity<Void> entregarSoloPorRecepcion(@PathVariable Long id) {
         service.getById(id);
         throw new IllegalStateException("La entrega se confirma exclusivamente mediante una recepción de farmacia.");

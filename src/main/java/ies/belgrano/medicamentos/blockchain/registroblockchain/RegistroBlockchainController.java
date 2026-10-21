@@ -1,5 +1,7 @@
 package ies.belgrano.medicamentos.blockchain.registroblockchain;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import ies.belgrano.medicamentos.exceptions.ResourceNotFoundException;
+
 @RestController
 @RequestMapping("/api/registros-blockchain")
+@Tag(name = "Registros demostrativos", description = "CRUD de metadatos declarados. No existe conexión con una blockchain distribuida ni verificación criptográfica de firmas.")
 public class RegistroBlockchainController {
 
     @Autowired
@@ -39,39 +44,31 @@ public class RegistroBlockchainController {
     public ResponseEntity<RegistroBlockchainResponseDTO> getById(@PathVariable Long id) {
         RegistroBlockchain registro = service.getById(id);
         if (registro == null) {
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("Registro demostrativo no encontrado con ID: " + id);
         }
         return ResponseEntity.ok(mapper.toResponseDTO(registro));
     }
 
     @PostMapping
     public ResponseEntity<RegistroBlockchainResponseDTO> create(@RequestBody RegistroBlockchainRequestDTO dto) {
-        try {
-            RegistroBlockchain nuevo = service.create(mapper.toEntity(dto));
-            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        RegistroBlockchain nuevo = service.create(mapper.toEntity(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RegistroBlockchainResponseDTO> update(@PathVariable Long id, @RequestBody RegistroBlockchainRequestDTO dto) {
-        try {
-            RegistroBlockchain actualizado = service.update(id, mapper.toEntity(dto));
-            if (actualizado == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+        RegistroBlockchain actualizado = service.update(id, mapper.toEntity(dto));
+        if (actualizado == null) {
+            throw new ResourceNotFoundException("Registro demostrativo no encontrado con ID: " + id);
         }
+        return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         RegistroBlockchain registro = service.getById(id);
         if (registro == null) {
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("Registro demostrativo no encontrado con ID: " + id);
         }
         service.delete(id);
         return ResponseEntity.noContent().build();
