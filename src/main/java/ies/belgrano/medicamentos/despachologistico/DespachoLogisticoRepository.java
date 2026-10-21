@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -30,6 +32,16 @@ public interface DespachoLogisticoRepository extends JpaRepository<DespachoLogis
     List<DespachoLogistico> findByEstado(EstadoDespacho estado);
 
     List<DespachoLogistico> findByLoteIdAndDistribuidorId(Long loteId, Long distribuidorId);
+
+    @Query("""
+            select d from DespachoLogistico d
+            where (:loteId is null or d.lote.id = :loteId)
+              and (:distribuidorId is null or d.distribuidor.id = :distribuidorId)
+              and (:estado is null or d.estado = :estado)
+            """)
+    List<DespachoLogistico> findByFiltros(@Param("loteId") Long loteId,
+                                         @Param("distribuidorId") Long distribuidorId,
+                                         @Param("estado") EstadoDespacho estado);
 
     Optional<DespachoLogistico> findByNumeroRemito(String numeroRemito);
 

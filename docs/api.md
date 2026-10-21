@@ -151,7 +151,7 @@ POST /api/dispensaciones
    - Solo se permite dispensar si el lote está en estado `RECIBIDO` o `LIBERADO`.
 4. **Farmacia válida**: La organización referenciada por `farmaciaId` debe existir y ser de tipo `FARMACIA`.
 5. **Recepción válida conforme a B06**: Debe existir al menos una `RecepcionFarmacia` para el lote en esa farmacia que cumpla:
-   - Estado de conformidad **distinto de** `RECHAZADA` (puede ser `CONFORME` u `OBSERVADA`).
+   - Estado de conformidad **`CONFORME`**. `OBSERVADA` no habilita la dispensación; este MVP no incluye un endpoint para resolverla posteriormente.
    - Despacho logístico asociado en estado `RECIBIDO`.
    - Enlace CUIT del despacho en estado `ACTIVO`.
    - La farmacia del enlace CUIT coincide con la farmacia declarada en la dispensación.
@@ -505,22 +505,23 @@ GET /api/public/consulta-qr/QR-UNIT-001
   },
   "cuarentena": {
     "enCuarentena": false,
-    "codigoCuarentena": null,
-    "motivo": null,
+    "resumen": null,
     "fechaInicio": null
   },
   "historialCustodia": [
     {
-      "tipoEvento": "DESPACHADO",
+      "tipoEvento": "LOTE_DESPACHADO",
       "fechaHoraEvento": "2026-10-16T10:00:00",
-      "organizacion": "Laboratorio Farmacéutico Central",
-      "descripcion": "Salida de planta hacia distribuidor",
+      "descripcion": "Lote despachado.",
       "hashDemostrativo": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   ],
-  "informacionRegulatoria": "Consulta pública informativa con fines demostrativos y académicos (MVP). La información provista no constituye certificación sanitaria regulatoria oficial de la ANMAT ni certificación de autenticidad en red blockchain distribuida."
+  "advertencias": [],
+  "informacionRegulatoria": "Consulta pública informativa con fines demostrativos y académicos (MVP). La información provista no constituye certificación sanitaria regulatoria oficial de la ANMAT ni certificación de autenticidad en red blockchain distribuida. Los hashes mostrados son demostrativos y no prueban autenticidad ni existencia de una blockchain distribuida."
 }
 ```
+
+`advertencias` contiene mensajes basados únicamente en estados reales: unidad `BLOQUEADA` o `DISPENSADA`, y lote `EN_CUARENTENA` o `CERRADO`. Puede incluir más de un mensaje y queda vacío en los demás estados. Son avisos informativos, no evaluaciones sanitarias.
 
 **Errores posibles**:
 | HTTP | Código              | Condición                                                  |
@@ -537,8 +538,9 @@ En estricto cumplimiento del principio de privacidad por diseño y minimización
 - Código QR consultado y estado actual de la unidad (`DISPONIBLE`, `DISPENSADA`, `BLOQUEADA`).
 - Denominación comercial y principio activo del medicamento; indicación de requerimiento de cadena de frío.
 - Código de lote y fecha de fabricación (si está disponible).
-- Estado de cuarentena del lote (indicador si se encuentra en cuarentena abierta, motivo y fecha de inicio, derivado de la issue B07).
-- Resumen/historial de eventos de custodia logística (tipo de hito, fecha/hora, razón social de la organización participante, descripción general y hash de demostración, derivado de la issue B04).
+- Estado de cuarentena del lote (indicador de cuarentena abierta, resumen fijo y fecha de inicio).
+- Resumen/historial de eventos de custodia logística (tipo de hito, fecha/hora, descripción normalizada por tipo y hash de demostración).
+- Advertencias informativas para estados de unidad o lote que requieren atención.
 - Aviso regulatorio explícito aclarando el carácter informativo y no vinculante del MVP.
 
 ### Datos expresamente excluidos de la Consulta Pública por QR:
@@ -547,5 +549,14 @@ En estricto cumplimiento del principio de privacidad por diseño y minimización
 - **Datos de contacto personal**: Teléfonos, correos electrónicos particulares o institucionales y domicilios particulares.
 - **Identificadores internos de base de datos de usuarios**: IDs primarios de la tabla `usuarios` o credenciales.
 - **Telemetría continua de sensores y ubicación GPS precisa**: Coordenadas geográficas exactas en tiempo real o registros crudos de registradores de temperatura (provenientes de B05) no se exponen al público general.
+- **Organizaciones distribuidoras, textos libres de custodia y motivos libres de cuarentena**: La consulta pública no presenta nombres de distribuidores, actores de eventos, descripciones ingresadas por usuarios ni el motivo original de cuarentena. El hash mostrado es demostrativo y no acredita autenticidad.
 - **Búsquedas masivas**: No se habilita endpoint público de listado de reportes ni búsqueda masiva o comodín de códigos QR.
 
+## 11. Ajustes puntuales B11 del flujo logístico
+
+- `POST /api/despachos-logisticos` deriva la farmacia destino del `EnlaceCUIT` activo; el enlace debe tener una organización de tipo `FARMACIA`. Si el request envía `farmaciaDestinoId`, debe coincidir. `destino` es una descripción logística y no reemplaza la relación con la farmacia. El lote y distribuidor deben corresponder al mismo enlace.
+- `POST /api/despachos-logisticos/{id}/entregar` y `/recibir` rechazan el cierre directo con `409 STATE_CONFLICT`. La única operación que marca un despacho como `RECIBIDO` es `POST /api/recepciones-farmacia` con resultado `CONFORME` u `OBSERVADA`; guarda la recepción, el evento y los cambios de estado en la misma transacción. Una recepción `RECHAZADA` cancela el despacho y registra un evento `RECEPCION_RECHAZADA` sin marcar el lote como recibido.
+- `POST /api/despachos-logisticos/{id}/cancelar` registra un evento `DESPACHO_CANCELADO` en la misma transacción. La organización del evento es la asociada al flujo, sin representar una identidad autenticada.
+- En una base MySQL ya creada, el `ENUM` de `eventos_custodia.tipo_evento` debe incorporar `DESPACHO_CANCELADO` y `RECEPCION_RECHAZADA`. La configuración local `ddl-auto=update` sincroniza el esquema; una instalación que use `validate` necesita esa migración previamente.
+- Los filtros `loteId`, `distribuidorId` y `estado` de `GET /api/despachos-logisticos` se aplican conjuntamente con lógica AND.
+- `PUT /api/cuarentenas/{id}` rechaza cambios a cuarentenas `LIBERADA` o `MANTENIDA`; no altera registros ya resueltos.

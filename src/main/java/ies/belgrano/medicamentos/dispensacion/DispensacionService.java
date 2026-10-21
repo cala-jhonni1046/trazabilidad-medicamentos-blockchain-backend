@@ -158,12 +158,12 @@ public class DispensacionService {
         }
 
         // 6. Regla 4 de Elegibilidad: El lote fue recibido en esa farmacia conforme a B06
-        // Se verifica que exista una recepción no rechazada para este lote en esta farmacia,
+        // Se exige una recepción CONFORME para este lote en esta farmacia,
         // con despacho RECIBIDO y enlace CUIT ACTIVO destinado a esta farmacia.
         List<RecepcionFarmacia> recepciones = recepcionRepo.findByDespachoLogisticoLoteIdAndFarmaciaId(loteEntidad.getId(), farmacia.getId());
 
         boolean recepcionValida = recepciones.stream().anyMatch(r ->
-                r.getEstadoConformidad() != EstadoRecepcion.RECHAZADA
+                r.getEstadoConformidad() == EstadoRecepcion.CONFORME
                 && r.getDespachoLogistico() != null
                 && r.getDespachoLogistico().getEstado() == EstadoDespacho.RECIBIDO
                 && r.getDespachoLogistico().getEnlaceCuit() != null
@@ -174,7 +174,7 @@ public class DispensacionService {
 
         if (!recepcionValida) {
             throw new IllegalStateException("No es posible dispensar la unidad: el lote "
-                    + loteEntidad.getCodigoLote() + " no cuenta con una recepción válida y confirmada en la farmacia "
+                    + loteEntidad.getCodigoLote() + " no cuenta con una recepción CONFORME en la farmacia "
                     + farmacia.getNombre() + " (ID " + farmacia.getId() + ") conforme a B06.");
         }
 
