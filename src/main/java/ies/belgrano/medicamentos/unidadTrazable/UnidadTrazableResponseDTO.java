@@ -15,6 +15,8 @@ public class UnidadTrazableResponseDTO {
     public void setId(Long id) { this.id = id; }
     public String getCodigoUnicoQR() { return codigoUnicoQR; }
     public void setCodigoUnicoQR(String codigoUnicoQR) { this.codigoUnicoQR = codigoUnicoQR; }
+    public String getCodigoQr() { return codigoUnicoQR; }
+    public void setCodigoQr(String codigoQr) { this.codigoUnicoQR = codigoQr; }
     public Long getLoteId() { return loteId; }
     public void setLoteId(Long loteId) { this.loteId = loteId; }
     public String getCodigoLote() { return codigoLote; }
