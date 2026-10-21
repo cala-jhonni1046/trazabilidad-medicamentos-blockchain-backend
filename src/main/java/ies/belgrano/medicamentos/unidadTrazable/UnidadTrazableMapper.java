@@ -9,8 +9,8 @@ public class UnidadTrazableMapper {
     public UnidadTrazable toEntity(UnidadTrazableRequestDTO dto) {
         if (dto == null) return null;
         UnidadTrazable entity = new UnidadTrazable();
-        entity.setCodigoUnicoQR(dto.getCodigoUnicoQR());
-        entity.setEstado(dto.getEstado());
+        entity.setCodigoUnicoQR(dto.getCodigoUnicoQR() != null ? dto.getCodigoUnicoQR().trim() : null);
+        entity.setEstado(EstadoUnidadTrazable.DISPONIBLE);
         if (dto.getLoteId() != null) {
             Lote lote = new Lote();
             lote.setId(dto.getLoteId());

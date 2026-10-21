@@ -1,6 +1,7 @@
 package ies.belgrano.medicamentos.reporteciudadano;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,69 +11,88 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/reportes-ciudadanos")
 public class ReporteCiudadanoController {
 
-    @Autowired
-    private ReporteCiudadanoService service;
+    private final ReporteCiudadanoService service;
+    private final ReporteCiudadanoMapper mapper;
 
-    @Autowired
-    private ReporteCiudadanoMapper mapper;
+    public ReporteCiudadanoController(ReporteCiudadanoService service, ReporteCiudadanoMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
+    }
 
     @GetMapping
-    public ResponseEntity<List<ReporteCiudadanoResponseDTO>> getAll() {
-        List<ReporteCiudadanoResponseDTO> lista = service.getAll().stream()
+    public ResponseEntity<List<ReporteCiudadanoResponseDTO>> getAll(
+            @RequestParam(required = false) EstadoReporte estado,
+            @RequestParam(required = false) Long unidadTrazableId,
+            @RequestParam(required = false) Long inspectorId) {
+        List<ReporteCiudadanoResponseDTO> lista = service.getAll(estado, unidadTrazableId, inspectorId).stream()
                 .map(mapper::toResponseDTO)
                 .toList();
-        if (lista.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
         return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ReporteCiudadanoResponseDTO> getById(@PathVariable Long id) {
         ReporteCiudadano reporte = service.getById(id);
-        if (reporte == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok(mapper.toResponseDTO(reporte));
     }
 
     @PostMapping
-    public ResponseEntity<ReporteCiudadanoResponseDTO> create(@RequestBody ReporteCiudadanoRequestDTO dto) {
-        try {
-            ReporteCiudadano nuevo = service.create(mapper.toEntity(dto));
-            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ReporteCiudadanoResponseDTO> create(@Valid @RequestBody ReporteCiudadanoRequestDTO dto) {
+        ReporteCiudadano nuevo = service.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(nuevo));
+    }
+
+    @PostMapping(path = { "/{id}/iniciar-revision" })
+    public ResponseEntity<ReporteCiudadanoResponseDTO> iniciarRevision(
+            @PathVariable Long id,
+            @RequestBody(required = false) ReporteRevisionRequestDTO dto) {
+        ReporteCiudadano enRevision = service.iniciarRevision(id, dto);
+        return ResponseEntity.ok(mapper.toResponseDTO(enRevision));
+    }
+
+    @PutMapping(path = { "/{id}/iniciar-revision" })
+    public ResponseEntity<ReporteCiudadanoResponseDTO> iniciarRevisionPut(
+            @PathVariable Long id,
+            @RequestBody(required = false) ReporteRevisionRequestDTO dto) {
+        ReporteCiudadano enRevision = service.iniciarRevision(id, dto);
+        return ResponseEntity.ok(mapper.toResponseDTO(enRevision));
+    }
+
+    @PostMapping(path = { "/{id}/resolver" })
+    public ResponseEntity<ReporteCiudadanoResponseDTO> resolver(
+            @PathVariable Long id,
+            @RequestBody(required = false) ReporteResolucionRequestDTO dto) {
+        ReporteCiudadano resuelto = service.resolver(id, dto);
+        return ResponseEntity.ok(mapper.toResponseDTO(resuelto));
+    }
+
+    @PutMapping(path = { "/{id}/resolver" })
+    public ResponseEntity<ReporteCiudadanoResponseDTO> resolverPut(
+            @PathVariable Long id,
+            @RequestBody(required = false) ReporteResolucionRequestDTO dto) {
+        ReporteCiudadano resuelto = service.resolver(id, dto);
+        return ResponseEntity.ok(mapper.toResponseDTO(resuelto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReporteCiudadanoResponseDTO> update(@PathVariable Long id, @RequestBody ReporteCiudadanoRequestDTO dto) {
-        try {
-            ReporteCiudadano actualizado = service.update(id, mapper.toEntity(dto));
-            if (actualizado == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ReporteCiudadanoResponseDTO> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ReporteCiudadanoRequestDTO dto) {
+        ReporteCiudadano actualizado = service.update(id, dto);
+        return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        ReporteCiudadano reporte = service.getById(id);
-        if (reporte == null) {
-            return ResponseEntity.notFound().build();
-        }
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

@@ -21,6 +21,8 @@ public class DispensacionResponseDTO {
     public void setUnidadTrazableId(Long value) { this.unidadTrazableId = value; }
     public String getCodigoUnicoQR() { return codigoUnicoQR; }
     public void setCodigoUnicoQR(String value) { this.codigoUnicoQR = value; }
+    public String getCodigoQr() { return codigoUnicoQR; }
+    public void setCodigoQr(String value) { this.codigoUnicoQR = value; }
     public Long getFarmaciaId() { return farmaciaId; }
     public void setFarmaciaId(Long value) { this.farmaciaId = value; }
     public String getFarmaciaNombre() { return farmaciaNombre; }

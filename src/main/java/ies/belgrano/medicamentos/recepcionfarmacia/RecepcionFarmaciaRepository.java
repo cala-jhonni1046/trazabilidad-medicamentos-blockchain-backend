@@ -22,5 +22,7 @@ public interface RecepcionFarmaciaRepository extends JpaRepository<RecepcionFarm
 
     List<RecepcionFarmacia> findByFarmaciaIdAndEstadoConformidad(Long farmaciaId, EstadoRecepcion estadoConformidad);
 
+    List<RecepcionFarmacia> findByDespachoLogisticoLoteIdAndFarmaciaId(Long loteId, Long farmaciaId);
+
     List<RecepcionFarmacia> findAllByOrderByFechaHoraRecepcionDescIdDesc();
 }
