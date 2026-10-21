@@ -183,11 +183,14 @@ public class RecepcionFarmaciaService {
 
         } else if (resultado == EstadoRecepcion.RECHAZADA) {
             despacho.setEstado(EstadoDespacho.CANCELADO);
-            if (dto.getObservaciones() != null && !dto.getObservaciones().isBlank()) {
-                despacho.setObservaciones("Recepción rechazada en farmacia: " + dto.getObservaciones().trim());
-            }
+            despacho.setObservaciones("Recepción rechazada en farmacia de destino.");
             despachoRepo.save(despacho);
             // El lote no cambia de estado (queda en su estado previo)
+            String motivo = dto.getObservaciones() != null && !dto.getObservaciones().isBlank()
+                    ? dto.getObservaciones().trim()
+                    : "Recepción rechazada sin motivo informado.";
+            despachoService.registrarEventoInterno(despacho, TipoEventoCustodia.RECEPCION_RECHAZADA,
+                    fechaHora, farmacia, motivo);
         }
 
         RecepcionFarmacia recepcion = new RecepcionFarmacia();

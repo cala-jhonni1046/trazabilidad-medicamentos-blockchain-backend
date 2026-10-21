@@ -45,19 +45,7 @@ public class DespachoLogisticoService {
 
     @Transactional(readOnly = true)
     public List<DespachoLogistico> getAll(Long loteId, Long distribuidorId, EstadoDespacho estado) {
-        if (loteId != null && distribuidorId != null) {
-            return despachoRepo.findByLoteIdAndDistribuidorId(loteId, distribuidorId);
-        }
-        if (loteId != null) {
-            return despachoRepo.findByLoteId(loteId);
-        }
-        if (distribuidorId != null) {
-            return despachoRepo.findByDistribuidorId(distribuidorId);
-        }
-        if (estado != null) {
-            return despachoRepo.findByEstado(estado);
-        }
-        return despachoRepo.findAll();
+        return despachoRepo.findByFiltros(loteId, distribuidorId, estado);
     }
 
     @Transactional(readOnly = true)
@@ -125,7 +113,13 @@ public class DespachoLogisticoService {
                     + ") no coincide con el distribuidor asignado al despacho (ID " + distribuidor.getId() + ").");
         }
 
-        // Comprobar la farmacia de destino si fue provista explícitamente en el request
+        // El enlace activo determina la farmacia de destino, aunque el request no la repita.
+        Organizacion farmaciaDestino = enlace.getFarmacia();
+        if (farmaciaDestino == null || farmaciaDestino.getId() == null
+                || farmaciaDestino.getTipo() != TipoOrganizacion.FARMACIA) {
+            throw new IllegalStateException("El enlace CUIT activo debe tener una farmacia de destino válida.");
+        }
+
         if (dto.getFarmaciaDestinoId() != null) {
             Organizacion farmacia = organizacionRepo.findById(dto.getFarmaciaDestinoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Farmacia destino no encontrada con ID: " + dto.getFarmaciaDestinoId()));
@@ -133,8 +127,8 @@ public class DespachoLogisticoService {
                 throw new IllegalArgumentException("La organización indicada como farmacia destino con ID "
                         + dto.getFarmaciaDestinoId() + " no es de tipo FARMACIA (tipo actual: " + farmacia.getTipo() + ").");
             }
-            if (enlace.getFarmacia() == null || !enlace.getFarmacia().getId().equals(farmacia.getId())) {
-                Long enlaceFarmId = enlace.getFarmacia() != null ? enlace.getFarmacia().getId() : null;
+            if (!farmaciaDestino.getId().equals(farmacia.getId())) {
+                Long enlaceFarmId = farmaciaDestino.getId();
                 throw new IllegalArgumentException("La farmacia destino indicada (ID " + dto.getFarmaciaDestinoId()
                         + ") no coincide con la farmacia habilitada en el enlace CUIT (ID " + enlaceFarmId + ").");
             }
@@ -176,6 +170,24 @@ public class DespachoLogisticoService {
 
         if (dto.getEstado() != null && dto.getEstado() != existente.getEstado()) {
             throw new IllegalStateException("No está permitido modificar el estado del despacho mediante actualización general. Use los endpoints de transición de estado específicos.");
+        }
+
+        if (dto.getLoteId() != null && !dto.getLoteId().equals(existente.getLote().getId())) {
+            throw new IllegalStateException("No está permitido cambiar el lote de un despacho registrado.");
+        }
+        if (dto.getDistribuidorId() != null && !dto.getDistribuidorId().equals(existente.getDistribuidor().getId())) {
+            throw new IllegalStateException("No está permitido cambiar el distribuidor de un despacho registrado.");
+        }
+        if (dto.getEnlaceCuitId() != null && !dto.getEnlaceCuitId().equals(existente.getEnlaceCuit().getId())) {
+            throw new IllegalStateException("No está permitido cambiar el enlace CUIT de un despacho registrado.");
+        }
+        Organizacion farmaciaDestino = existente.getEnlaceCuit().getFarmacia();
+        if (farmaciaDestino == null || farmaciaDestino.getId() == null
+                || farmaciaDestino.getTipo() != TipoOrganizacion.FARMACIA) {
+            throw new IllegalStateException("El enlace CUIT del despacho no tiene una farmacia de destino válida.");
+        }
+        if (dto.getFarmaciaDestinoId() != null && !dto.getFarmaciaDestinoId().equals(farmaciaDestino.getId())) {
+            throw new IllegalStateException("La farmacia de destino debe coincidir con la del enlace CUIT del despacho.");
         }
 
         String remito = dto.getNumeroRemito() != null ? dto.getNumeroRemito().trim() : null;
@@ -246,33 +258,6 @@ public class DespachoLogisticoService {
     }
 
     @Transactional
-    public DespachoLogistico entregarDespacho(Long id, TransicionDespachoRequestDTO dto) {
-        DespachoLogistico despacho = getById(id);
-
-        if (despacho.getEstado() != EstadoDespacho.EN_TRANSITO) {
-            throw new IllegalStateException("Solo se puede registrar entrega/recepción de un despacho en estado EN_TRANSITO. Estado actual: " + despacho.getEstado());
-        }
-
-        LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);
-        despacho.setEstado(EstadoDespacho.RECIBIDO);
-        despacho.setFechaEntregaReal(ahora);
-
-        if (dto != null && dto.getObservaciones() != null && !dto.getObservaciones().isBlank()) {
-            despacho.setObservaciones(dto.getObservaciones());
-        }
-
-        DespachoLogistico actualizado = despachoRepo.save(despacho);
-
-        Organizacion farmacia = (actualizado.getEnlaceCuit() != null) ? actualizado.getEnlaceCuit().getFarmacia() : null;
-        String desc = (dto != null && dto.getObservaciones() != null && !dto.getObservaciones().isBlank())
-                ? dto.getObservaciones()
-                : "Recepción logística del despacho confirmada en destino.";
-        registrarEventoInterno(actualizado, TipoEventoCustodia.RECEPCION_CONFIRMADA, ahora, farmacia, desc);
-
-        return actualizado;
-    }
-
-    @Transactional
     public DespachoLogistico cancelarDespacho(Long id, TransicionDespachoRequestDTO dto) {
         DespachoLogistico despacho = getById(id);
 
@@ -282,10 +267,17 @@ public class DespachoLogisticoService {
 
         despacho.setEstado(EstadoDespacho.CANCELADO);
         if (dto != null && dto.getObservaciones() != null && !dto.getObservaciones().isBlank()) {
-            despacho.setObservaciones(dto.getObservaciones());
+            despacho.setObservaciones(dto.getObservaciones().trim());
         }
 
-        return despachoRepo.save(despacho);
+        DespachoLogistico cancelado = despachoRepo.save(despacho);
+        String motivo = dto != null && dto.getObservaciones() != null && !dto.getObservaciones().isBlank()
+                ? dto.getObservaciones().trim()
+                : "Despacho cancelado sin motivo informado.";
+        // El distribuidor es la organización asociada al despacho, no una identidad autenticada.
+        registrarEventoInterno(cancelado, TipoEventoCustodia.DESPACHO_CANCELADO,
+                LocalDateTime.now(ZoneOffset.UTC), cancelado.getDistribuidor(), motivo);
+        return cancelado;
     }
 
     @Transactional

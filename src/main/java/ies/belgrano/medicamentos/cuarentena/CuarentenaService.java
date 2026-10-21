@@ -195,6 +195,10 @@ public class CuarentenaService {
     public Cuarentena update(Long id, CuarentenaRequestDTO dto) {
         Cuarentena existente = getById(id);
 
+        if (existente.getEstado() != EstadoCuarentena.ABIERTA) {
+            throw new IllegalStateException("No está permitido modificar una cuarentena resuelta; su historial debe permanecer intacto.");
+        }
+
         if (dto.getEstado() != null && dto.getEstado() != existente.getEstado()) {
             throw new IllegalStateException(
                     "No está permitido modificar el estado de una cuarentena mediante PUT. Utilice el endpoint de resolución.");

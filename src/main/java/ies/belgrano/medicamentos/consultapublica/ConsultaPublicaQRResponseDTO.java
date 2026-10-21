@@ -11,6 +11,7 @@ public class ConsultaPublicaQRResponseDTO {
     private LoteConsultaDTO lote;
     private CuarentenaConsultaDTO cuarentena;
     private List<CustodiaConsultaDTO> historialCustodia;
+    private List<String> advertencias;
     private String informacionRegulatoria;
 
     public ConsultaPublicaQRResponseDTO() {
@@ -62,6 +63,14 @@ public class ConsultaPublicaQRResponseDTO {
 
     public void setHistorialCustodia(List<CustodiaConsultaDTO> historialCustodia) {
         this.historialCustodia = historialCustodia;
+    }
+
+    public List<String> getAdvertencias() {
+        return advertencias;
+    }
+
+    public void setAdvertencias(List<String> advertencias) {
+        this.advertencias = advertencias;
     }
 
     public String getInformacionRegulatoria() {
@@ -152,17 +161,15 @@ public class ConsultaPublicaQRResponseDTO {
 
     public static class CuarentenaConsultaDTO {
         private boolean enCuarentena;
-        private String codigoCuarentena;
-        private String motivo;
+        private String resumen;
         private LocalDateTime fechaInicio;
 
         public CuarentenaConsultaDTO() {
         }
 
-        public CuarentenaConsultaDTO(boolean enCuarentena, String codigoCuarentena, String motivo, LocalDateTime fechaInicio) {
+        public CuarentenaConsultaDTO(boolean enCuarentena, String resumen, LocalDateTime fechaInicio) {
             this.enCuarentena = enCuarentena;
-            this.codigoCuarentena = codigoCuarentena;
-            this.motivo = motivo;
+            this.resumen = resumen;
             this.fechaInicio = fechaInicio;
         }
 
@@ -174,20 +181,12 @@ public class ConsultaPublicaQRResponseDTO {
             this.enCuarentena = enCuarentena;
         }
 
-        public String getCodigoCuarentena() {
-            return codigoCuarentena;
+        public String getResumen() {
+            return resumen;
         }
 
-        public void setCodigoCuarentena(String codigoCuarentena) {
-            this.codigoCuarentena = codigoCuarentena;
-        }
-
-        public String getMotivo() {
-            return motivo;
-        }
-
-        public void setMotivo(String motivo) {
-            this.motivo = motivo;
+        public void setResumen(String resumen) {
+            this.resumen = resumen;
         }
 
         public LocalDateTime getFechaInicio() {
@@ -202,18 +201,16 @@ public class ConsultaPublicaQRResponseDTO {
     public static class CustodiaConsultaDTO {
         private String tipoEvento;
         private LocalDateTime fechaHoraEvento;
-        private String organizacion;
         private String descripcion;
         private String hashDemostrativo;
 
         public CustodiaConsultaDTO() {
         }
 
-        public CustodiaConsultaDTO(String tipoEvento, LocalDateTime fechaHoraEvento, String organizacion,
+        public CustodiaConsultaDTO(String tipoEvento, LocalDateTime fechaHoraEvento,
                                   String descripcion, String hashDemostrativo) {
             this.tipoEvento = tipoEvento;
             this.fechaHoraEvento = fechaHoraEvento;
-            this.organizacion = organizacion;
             this.descripcion = descripcion;
             this.hashDemostrativo = hashDemostrativo;
         }
@@ -232,14 +229,6 @@ public class ConsultaPublicaQRResponseDTO {
 
         public void setFechaHoraEvento(LocalDateTime fechaHoraEvento) {
             this.fechaHoraEvento = fechaHoraEvento;
-        }
-
-        public String getOrganizacion() {
-            return organizacion;
-        }
-
-        public void setOrganizacion(String organizacion) {
-            this.organizacion = organizacion;
         }
 
         public String getDescripcion() {
