@@ -1,5 +1,7 @@
 package ies.belgrano.medicamentos.despachologistico;
 
+import io.swagger.v3.oas.annotations.Operation;
+
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -65,23 +67,22 @@ public class DespachoLogisticoController {
     @PostMapping("/{id}/iniciar")
     public ResponseEntity<DespachoLogisticoResponseDTO> iniciar(
             @PathVariable Long id,
-            @RequestBody(required = false) TransicionDespachoRequestDTO dto) {
+            @Valid @RequestBody(required = false) TransicionDespachoRequestDTO dto) {
         DespachoLogistico enTransito = service.iniciarDespacho(id, dto);
         return ResponseEntity.ok(despachoMapper.toResponseDTO(enTransito));
     }
 
     @PostMapping(path = { "/{id}/entregar", "/{id}/recibir" })
-    public ResponseEntity<DespachoLogisticoResponseDTO> entregar(
-            @PathVariable Long id,
-            @RequestBody(required = false) TransicionDespachoRequestDTO dto) {
-        DespachoLogistico recibido = service.entregarDespacho(id, dto);
-        return ResponseEntity.ok(despachoMapper.toResponseDTO(recibido));
+    @Operation(summary = "Cierre directo deshabilitado", description = "Ruta conservada por compatibilidad: devuelve 409. Registrar la recepción mediante POST /api/recepciones-farmacia.")
+    public ResponseEntity<Void> entregarSoloPorRecepcion(@PathVariable Long id) {
+        service.getById(id);
+        throw new IllegalStateException("La entrega se confirma exclusivamente mediante una recepción de farmacia.");
     }
 
     @PostMapping("/{id}/cancelar")
     public ResponseEntity<DespachoLogisticoResponseDTO> cancelar(
             @PathVariable Long id,
-            @RequestBody(required = false) TransicionDespachoRequestDTO dto) {
+            @Valid @RequestBody(required = false) TransicionDespachoRequestDTO dto) {
         DespachoLogistico cancelado = service.cancelarDespacho(id, dto);
         return ResponseEntity.ok(despachoMapper.toResponseDTO(cancelado));
     }
