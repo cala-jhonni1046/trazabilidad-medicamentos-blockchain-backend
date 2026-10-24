@@ -140,6 +140,7 @@ public class ConsultaPublicaService {
             case CUARENTENA_ABIERTA -> "Cuarentena abierta.";
             case CUARENTENA_RESUELTA -> "Cuarentena resuelta.";
             case UNIDAD_DISPENSADA -> "Dispensación registrada.";
+            case INCIDENTE_EN_RUTA -> "Incidente o demora en ruta registrado.";
         };
     }
 }

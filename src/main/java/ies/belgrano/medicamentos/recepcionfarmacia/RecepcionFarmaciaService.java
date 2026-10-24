@@ -46,25 +46,16 @@ public class RecepcionFarmaciaService {
 
     @Transactional(readOnly = true)
     public List<RecepcionFarmacia> getAll(Long despachoLogisticoId, Long farmaciaId, EstadoRecepcion estadoConformidad) {
-        if (despachoLogisticoId != null) {
-            if (!despachoRepo.existsById(despachoLogisticoId)) {
-                throw new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + despachoLogisticoId);
-            }
-            return recepcionRepo.findByDespachoLogisticoId(despachoLogisticoId);
+        if (despachoLogisticoId != null && !despachoRepo.existsById(despachoLogisticoId)) {
+            throw new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + despachoLogisticoId);
         }
-        if (farmaciaId != null) {
-            if (!organizacionRepo.existsById(farmaciaId)) {
-                throw new ResourceNotFoundException("Farmacia no encontrada con ID: " + farmaciaId);
-            }
-            if (estadoConformidad != null) {
-                return recepcionRepo.findByFarmaciaIdAndEstadoConformidad(farmaciaId, estadoConformidad);
-            }
-            return recepcionRepo.findByFarmaciaId(farmaciaId);
+        if (farmaciaId != null && !organizacionRepo.existsById(farmaciaId)) {
+            throw new ResourceNotFoundException("Farmacia no encontrada con ID: " + farmaciaId);
         }
-        if (estadoConformidad != null) {
-            return recepcionRepo.findByEstadoConformidad(estadoConformidad);
+        if (despachoLogisticoId == null && farmaciaId == null && estadoConformidad == null) {
+            return recepcionRepo.findAllByOrderByFechaHoraRecepcionDescIdDesc();
         }
-        return recepcionRepo.findAllByOrderByFechaHoraRecepcionDescIdDesc();
+        return recepcionRepo.findByFiltros(despachoLogisticoId, farmaciaId, estadoConformidad);
     }
 
     @Transactional(readOnly = true)

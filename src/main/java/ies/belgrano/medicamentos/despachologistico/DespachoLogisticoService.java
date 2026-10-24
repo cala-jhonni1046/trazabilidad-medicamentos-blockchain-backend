@@ -16,6 +16,7 @@ import ies.belgrano.medicamentos.enlaceCUIT.EnlaceCUIT;
 import ies.belgrano.medicamentos.enlaceCUIT.EnlaceCUITRepository;
 import ies.belgrano.medicamentos.enlaceCUIT.EstadoEnlaceCuit;
 import ies.belgrano.medicamentos.exceptions.ResourceNotFoundException;
+import ies.belgrano.medicamentos.lote.EstadoLote;
 import ies.belgrano.medicamentos.lote.Lote;
 import ies.belgrano.medicamentos.lote.LoteRepository;
 import ies.belgrano.medicamentos.organizacion.Organizacion;
@@ -45,7 +46,16 @@ public class DespachoLogisticoService {
 
     @Transactional(readOnly = true)
     public List<DespachoLogistico> getAll(Long loteId, Long distribuidorId, EstadoDespacho estado) {
-        return despachoRepo.findByFiltros(loteId, distribuidorId, estado);
+        return getAll(loteId, distribuidorId, estado, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DespachoLogistico> getAll(Long loteId, Long distribuidorId, EstadoDespacho estado,
+                                          Long laboratorioId, Long farmaciaDestinoId) {
+        if (loteId == null && distribuidorId == null && estado == null && laboratorioId == null && farmaciaDestinoId == null) {
+            return despachoRepo.findAll();
+        }
+        return despachoRepo.findByFiltros(loteId, distribuidorId, estado, laboratorioId, farmaciaDestinoId);
     }
 
     @Transactional(readOnly = true)
@@ -234,6 +244,18 @@ public class DespachoLogisticoService {
 
         if (despacho.getEstado() != EstadoDespacho.PREPARADO) {
             throw new IllegalStateException("Solo se puede iniciar un despacho en estado PREPARADO. Estado actual: " + despacho.getEstado());
+        }
+
+        Lote lote = despacho.getLote();
+        if (lote != null) {
+            if (lote.getEstado() == EstadoLote.EN_CUARENTENA || lote.getEstado() == EstadoLote.CERRADO) {
+                throw new IllegalStateException("No se puede iniciar el despacho porque el lote asociado (ID "
+                        + lote.getId() + ") se encuentra en estado " + lote.getEstado() + ".");
+            }
+            if (lote.getEstado() == EstadoLote.CREADO) {
+                lote.setEstado(EstadoLote.EN_TRANSITO);
+                loteRepo.save(lote);
+            }
         }
 
         LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);

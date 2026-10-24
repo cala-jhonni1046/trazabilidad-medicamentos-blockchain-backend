@@ -38,8 +38,10 @@ public class DespachoLogisticoController {
     public ResponseEntity<List<DespachoLogisticoResponseDTO>> getAll(
             @RequestParam(required = false) Long loteId,
             @RequestParam(required = false) Long distribuidorId,
-            @RequestParam(required = false) EstadoDespacho estado) {
-        List<DespachoLogisticoResponseDTO> lista = service.getAll(loteId, distribuidorId, estado).stream()
+            @RequestParam(required = false) EstadoDespacho estado,
+            @RequestParam(required = false) Long laboratorioId,
+            @RequestParam(required = false) Long farmaciaDestinoId) {
+        List<DespachoLogisticoResponseDTO> lista = service.getAll(loteId, distribuidorId, estado, laboratorioId, farmaciaDestinoId).stream()
                 .map(despachoMapper::toResponseDTO)
                 .toList();
         return ResponseEntity.ok(lista);

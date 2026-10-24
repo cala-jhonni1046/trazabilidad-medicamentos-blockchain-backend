@@ -33,10 +33,15 @@ public class EnlaceCUITService {
 
     @Transactional(readOnly = true)
     public List<EnlaceCUIT> getAll(EstadoEnlaceCuit estado) {
-        if (estado != null) {
-            return enlaceRepo.findByEstado(estado);
+        return getAll(estado, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EnlaceCUIT> getAll(EstadoEnlaceCuit estado, Long laboratorioId, Long distribuidorId, Long farmaciaId) {
+        if (estado == null && laboratorioId == null && distribuidorId == null && farmaciaId == null) {
+            return enlaceRepo.findAll();
         }
-        return enlaceRepo.findAll();
+        return enlaceRepo.findByFiltros(estado, laboratorioId, distribuidorId, farmaciaId);
     }
 
     @Transactional(readOnly = true)

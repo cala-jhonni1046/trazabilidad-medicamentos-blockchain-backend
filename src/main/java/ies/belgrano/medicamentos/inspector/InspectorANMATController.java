@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -28,8 +29,8 @@ public class InspectorANMATController {
     }
 
     @GetMapping
-    public ResponseEntity<List<InspectorANMATResponseDTO>> getAll() {
-        List<InspectorANMATResponseDTO> dtoList = service.getAll().stream()
+    public ResponseEntity<List<InspectorANMATResponseDTO>> getAll(@RequestParam(required = false) String dni) {
+        List<InspectorANMATResponseDTO> dtoList = service.getAll(dni).stream()
                 .map(mapper::toResponseDTO)
                 .toList();
         return ResponseEntity.ok(dtoList);

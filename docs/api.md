@@ -8,34 +8,36 @@ Este documento describe el código de esta rama. Todas las rutas usan JSON y tie
 |---|---|---|
 | Organizaciones, medicamentos, usuarios, inspectores, lotes y enlaces CUIT | Implementado | CRUD y reglas locales indicadas abajo. `Usuario` administra datos y roles; no inicia sesión. |
 | Despachos, eventos de custodia, telemetría y recepciones | Implementado con límites | Telemetría ingresada mediante API; hashes locales demostrativos. La recepción B06 cierra la entrega. |
-| Cuarentenas, unidades, dispensaciones, reportes y consulta QR | Implementado con límites | No hay verificación regulatoria, receta clínica ni autenticación del actor. |
-| `/registros-blockchain` | Parcial / demostrativo | CRUD de metadatos declarados; no envía transacciones a una red blockchain ni verifica firmas. |
-| Resolución de recepción `OBSERVADA`, bloqueo explícito de unidad, generación masiva de QR, autenticación y blockchain distribuida | Pendiente / fuera del MVP | No existe endpoint que complete estas capacidades. |
+| Cuarentenas, unidades, dispensaciones, reportes y consulta QR | Implementado con límites | No hay verificación regulatoria, receta clínica ni autenticación del actor. Generación de unidades por lote implementada en `/api/lotes/{id}/unidades`. |
+| `/registros-blockchain` | Parcial / demostrativo | CRUD de metadatos declarados con Bean Validation; no envía transacciones a una red blockchain ni verifica firmas. |
+| Resolución de recepción `OBSERVADA`, bloqueo explícito de unidad, autenticación y blockchain distribuida | Pendiente / fuera del MVP | No existe endpoint que complete estas capacidades. |
 
 ## Convenciones de rutas, cuerpos y estados HTTP
 
 En las tablas, `{id}` es un ID numérico, `R` es el `*RequestDTO` del módulo y `S` es su `*ResponseDTO`; las listas son arreglos de `S`. Los DTO de respuesta proyectan datos y no serializan entidades JPA. Los campos opcionales pueden aparecer como `null`; los `LocalDateTime` se representan como `YYYY-MM-DDTHH:mm:ss` y no contienen zona horaria. La aplicación usa UTC como valor predeterminado en los flujos que asignan fecha automáticamente.
+
+> **Nota sobre códigos HTTP de altas y documentación OpenAPI**: Las operaciones de creación (altas) responden con estado HTTP **`201 Created`**. Nótese que las herramientas de documentación basadas en springdoc / Swagger UI muestran HTTP `200 OK` por defecto para las operaciones `@PostMapping` si el controlador no declara explícitamente anotaciones `@ResponseStatus(HttpStatus.CREATED)` o `@ApiResponse(responseCode = "201")`.
 
 | Módulo | Métodos y rutas disponibles | Entrada / filtros | Salida de éxito |
 |---|---|---|---|
 | Organizaciones | `GET /organizaciones`, `GET /organizaciones/{id}`, `GET /organizaciones/cuit/{cuit}`, `POST /organizaciones`, `PUT /organizaciones/{id}`, `DELETE /organizaciones/{id}` | `GET` admite `cuit`; `POST/PUT`: `OrganizacionRequestDTO` | `GET/PUT` 200 `OrganizacionResponseDTO` o lista; `POST` 201; `DELETE` 204. |
 | Medicamentos | `GET /medicamentos`, `GET /medicamentos/{id}`, `POST /medicamentos`, `PUT /medicamentos/{id}`, `DELETE /medicamentos/{id}` | `POST/PUT`: `MedicamentoRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
 | Usuarios | `GET /usuarios`, `GET /usuarios/{id}`, `POST /usuarios`, `PUT /usuarios/{id}`, `PATCH /usuarios/{id}/activar`, `PATCH /usuarios/{id}/desactivar`, `DELETE /usuarios/{id}` | `POST/PUT`: `UsuarioRequestDTO`; `PATCH` sin cuerpo | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
-| Inspectores | `GET /inspectores`, `GET /inspectores/{id}`, `GET /inspectores/usuario/{usuarioId}`, `POST /inspectores`, `PUT /inspectores/{id}`, `DELETE /inspectores/{id}` | `POST/PUT`: `InspectorANMATRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
-| Lotes | `GET /lotes`, `GET /lotes/{id}`, `POST /lotes`, `PUT /lotes/{id}`, `DELETE /lotes/{id}` | `GET` admite `medicamentoId`; `POST/PUT`: `LoteRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
-| Enlaces CUIT | `GET /enlaces-cuit`, `GET /enlaces-cuit/{id}`, `POST /enlaces-cuit`, `PUT /enlaces-cuit/{id}`, `POST /enlaces-cuit/{id}/aprobar`, `POST /enlaces-cuit/{id}/rechazar`, `DELETE /enlaces-cuit/{id}` | `GET` admite `estado`; `POST/PUT`: `EnlaceCUITRequestDTO`; aprobar/rechazar: `EnlaceResolucionRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
-| Despachos | `GET /despachos-logisticos`, `GET /despachos-logisticos/{id}`, `POST /despachos-logisticos`, `PUT /despachos-logisticos/{id}`, `POST /despachos-logisticos/{id}/iniciar`, `POST /despachos-logisticos/{id}/cancelar`, `DELETE /despachos-logisticos/{id}` | `GET`: `loteId`, `distribuidorId`, `estado` combinados con AND; `POST/PUT`: `DespachoLogisticoRequestDTO`; transiciones: `TransicionDespachoRequestDTO` opcional | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
+| Inspectores | `GET /inspectores`, `GET /inspectores/{id}`, `GET /inspectores/usuario/{usuarioId}`, `POST /inspectores`, `PUT /inspectores/{id}`, `DELETE /inspectores/{id}` | `GET` admite filtro opcional `dni` (normaliza puntos y espacios); `POST/PUT`: `InspectorANMATRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo. El DNI es visible en el response (limitación conocida del MVP). |
+| Lotes | `GET /lotes`, `GET /lotes/{id}`, `POST /lotes`, `POST /lotes/{id}/unidades`, `PUT /lotes/{id}`, `DELETE /lotes/{id}` | `GET`: filtros combinables `medicamentoId`, `laboratorioId`, `estado` (404 si ID no existe); `POST /lotes`: `LoteRequestDTO`; `POST /lotes/{id}/unidades`: `GenerarUnidadesRequestDTO` (`{"cantidad": n}`); `PUT`: `LoteRequestDTO` | 200 lista/DTO; `POST /lotes` 201 `LoteResponseDTO`; `POST /lotes/{id}/unidades` 201 `GeneracionUnidadesResponseDTO`; `PUT` 200; `DELETE` 204. |
+| Enlaces CUIT | `GET /enlaces-cuit`, `GET /enlaces-cuit/{id}`, `POST /enlaces-cuit`, `PUT /enlaces-cuit/{id}`, `POST /enlaces-cuit/{id}/aprobar`, `POST /enlaces-cuit/{id}/rechazar`, `DELETE /enlaces-cuit/{id}` | `GET`: filtros combinables `estado`, `laboratorioId`, `distribuidorId`, `farmaciaId`; `POST`: `EnlaceCUITRequestDTO`; `PUT`: `EnlaceCUITRequestDTO` con `@Valid`; aprobar/rechazar: `EnlaceResolucionRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
+| Despachos | `GET /despachos-logisticos`, `GET /despachos-logisticos/{id}`, `POST /despachos-logisticos`, `PUT /despachos-logisticos/{id}`, `POST /despachos-logisticos/{id}/iniciar`, `POST /despachos-logisticos/{id}/cancelar`, `DELETE /despachos-logisticos/{id}` | `GET`: `loteId`, `distribuidorId`, `estado`, `laboratorioId`, `farmaciaDestinoId` combinados con AND; `POST/PUT`: `DespachoLogisticoRequestDTO`; `/iniciar`: actualiza lote a `EN_TRANSITO` si está `CREADO` (rechazo 409 si `EN_CUARENTENA` o `CERRADO`) | 200 lista/DTO, 201 DTO, 204 sin cuerpo. |
 | Cierre B04 conservado | `POST /despachos-logisticos/{id}/entregar`, `POST /despachos-logisticos/{id}/recibir` | Sin cuerpo | `404` si no existe; si existe, `409 STATE_CONFLICT`. La recepción B06 es el cierre efectivo. |
-| Eventos de custodia | `GET /despachos-logisticos/{id}/eventos`, `GET /despachos-logisticos/{id}/eventos-custodia`, `POST` en ambas rutas | `POST`: `EventoCustodiaRequestDTO` | `GET` 200 lista `EventoCustodiaResponseDTO`; `POST` 201 DTO. |
+| Eventos de custodia | `GET /despachos-logisticos/{id}/eventos`, `GET /despachos-logisticos/{id}/eventos-custodia`, `POST` en ambas rutas | `POST`: `EventoCustodiaRequestDTO` (admite tipos incluyendo `INCIDENTE_EN_RUTA`) | `GET` 200 lista `EventoCustodiaResponseDTO`; `POST` 201 DTO. |
 | Temperatura | `GET /telemetrias-temperatura`, `GET /telemetrias-temperatura/{id}`, `POST /telemetrias-temperatura` | `GET`: `despachoLogisticoId` o alias `despachoId`; `POST`: `TelemetriaTemperaturaRequestDTO` | 200 lista/DTO, 201 DTO. |
 | GPS | `GET /telemetrias-gps`, `GET /telemetrias-gps/{id}`, `POST /telemetrias-gps` | `GET`: `despachoLogisticoId` o alias `despachoId`; `POST`: `TelemetriaGPSRequestDTO` | 200 lista/DTO, 201 DTO. |
-| Recepciones | `GET /recepciones-farmacia`, `GET /recepciones-farmacia/{id}`, `POST /recepciones-farmacia`, `PUT /recepciones-farmacia/{id}`, `DELETE /recepciones-farmacia/{id}` | `GET`: `despachoLogisticoId`/`despachoId`, `farmaciaId`, `estadoConformidad`; `POST/PUT`: `RecepcionFarmaciaRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo si la operación se admite. |
+| Recepciones | `GET /recepciones-farmacia`, `GET /recepciones-farmacia/{id}`, `POST /recepciones-farmacia`, `PUT /recepciones-farmacia/{id}`, `DELETE /recepciones-farmacia/{id}` | `GET`: filtros combinables `despachoLogisticoId`/`despachoId`, `farmaciaId`, `estadoConformidad` (404 si ID no existe); `POST/PUT`: `RecepcionFarmaciaRequestDTO` | 200 lista/DTO, 201 DTO, 204 sin cuerpo si la operación se admite. |
 | Cuarentenas | `GET /cuarentenas`, `GET /cuarentenas/{id}`, `GET /cuarentenas/abierta?loteIdParam={id}`, `GET /cuarentenas/lote/{loteId}/abierta`, `POST /cuarentenas`, `POST /cuarentenas/{id}/resolver`, `POST /cuarentenas/{id}/liberar`, `POST /cuarentenas/{id}/mantener`, `PUT /cuarentenas/{id}`, `DELETE /cuarentenas/{id}` | `GET` lista: `loteId`, `estado`; abrir/editar: `CuarentenaRequestDTO`; resolver: `CuarentenaResolucionRequestDTO`; liberar/mantener: cuerpo opcional de ese DTO | 200 lista/DTO, 201 DTO, 204 solo si se admite. |
-| Unidades | `GET /unidades-trazables`, `GET /unidades-trazables/{id}`, `GET /unidades-trazables/qr/{codigoQr}`, `POST /unidades-trazables`, `PUT /unidades-trazables/{id}`, `DELETE /unidades-trazables/{id}` | `GET`: `loteId` o `codigoQr`; `POST/PUT`: `UnidadTrazableRequestDTO` | 200 lista/DTO, 201 DTO; `DELETE` siempre se rechaza. |
+| Unidades | `GET /unidades-trazables`, `GET /unidades-trazables/{id}`, `GET /unidades-trazables/qr/{codigoQr}`, `POST /unidades-trazables`, `PUT /unidades-trazables/{id}`, `DELETE /unidades-trazables/{id}` | `GET`: filtros combinables `loteId`, `codigoQr`, `estado` (404 si `loteId` no existe); `POST/PUT`: `UnidadTrazableRequestDTO` | 200 lista/DTO, 201 DTO; `DELETE` siempre se rechaza. |
 | Dispensaciones | `GET /dispensaciones`, `GET /dispensaciones/{id}`, `GET /dispensaciones/unidad/{unidadId}`, `POST /dispensaciones`, `PUT /dispensaciones/{id}`, `DELETE /dispensaciones/{id}` | `GET`: `farmaciaId`, `unidadTrazableId`; `POST`: `DispensacionRequestDTO`; `PUT` acepta cuerpo opcional pero siempre se rechaza | 200 lista/DTO, 201 DTO; `PUT/DELETE` se rechazan. |
-| Reportes | `GET /reportes-ciudadanos`, `GET /reportes-ciudadanos/{id}`, `POST /reportes-ciudadanos`, `POST` y `PUT /reportes-ciudadanos/{id}/iniciar-revision`, `POST` y `PUT /reportes-ciudadanos/{id}/resolver`, `PUT /reportes-ciudadanos/{id}`, `DELETE /reportes-ciudadanos/{id}` | `GET`: `estado`, `unidadTrazableId`, `inspectorId`; alta/edición: `ReporteCiudadanoRequestDTO`; transiciones: `ReporteRevisionRequestDTO` o `ReporteResolucionRequestDTO` opcionales | 200 lista/DTO, 201 DTO; `DELETE` se rechaza. |
+| Reportes | `GET /reportes-ciudadanos`, `GET /reportes-ciudadanos/{id}`, `POST /reportes-ciudadanos`, `POST` y `PUT /reportes-ciudadanos/{id}/iniciar-revision`, `POST` y `PUT /reportes-ciudadanos/{id}/resolver`, `PUT /reportes-ciudadanos/{id}`, `DELETE /reportes-ciudadanos/{id}` | `GET`: filtros combinables `estado`, `unidadTrazableId`, `inspectorId`; alta/edición: `ReporteCiudadanoRequestDTO`; transiciones: `ReporteRevisionRequestDTO` o `ReporteResolucionRequestDTO` opcionales | 200 lista/DTO, 201 DTO; `DELETE` se rechaza. |
 | Consulta QR pública | `GET /public/consulta-qr/{codigoQr}`, `GET /consulta-publica/qr/{codigoQr}` | Solo código QR en ruta | 200 `ConsultaPublicaQRResponseDTO`. |
-| Registros demostrativos | `GET /registros-blockchain`, `GET /registros-blockchain/{id}`, `POST /registros-blockchain`, `PUT /registros-blockchain/{id}`, `DELETE /registros-blockchain/{id}` | `POST/PUT`: `RegistroBlockchainRequestDTO` | Lista 200 o 204 si está vacía; DTO 200, alta 201, borrado 204. |
+| Registros demostrativos | `GET /registros-blockchain`, `GET /registros-blockchain/{id}`, `POST /registros-blockchain`, `PUT /registros-blockchain/{id}`, `DELETE /registros-blockchain/{id}` | `POST/PUT`: `RegistroBlockchainRequestDTO` con `@Valid` | Lista 200 o 204 si está vacía; DTO 200, alta 201, borrado 204. |
 
 Los códigos de éxito de la tabla dependen de que el servicio acepte la operación. Una ruta `DELETE` visible no implica que el recurso pueda borrarse. Las consultas inexistentes devuelven 404 en los servicios que lanzan `ResourceNotFoundException`; los registros demostrativos también usan 404 H0 tras B10. En listas, la ausencia de coincidencias suele devolver `200 []`, excepto registros demostrativos (`204`).
 
@@ -75,33 +77,44 @@ Resolución de enlace (`POST /enlaces-cuit/{id}/aprobar` o `/rechazar`): `{"insp
 | Recurso | Estados | Alta y transiciones reales |
 |---|---|---|
 | Enlace CUIT | `PENDIENTE`, `ACTIVO`, `RECHAZADO` | Alta pendiente; aprobar/rechazar mediante inspector habilitado. El despacho exige `ACTIVO`. |
-| Lote | `CREADO`, `EN_TRANSITO`, `RECIBIDO`, `EN_CUARENTENA`, `LIBERADO`, `CERRADO` | Alta creado; recepción conforme u observada lo lleva a recibido; apertura de cuarentena a en cuarentena; resolución puede liberar o mantener la retención. Iniciar un despacho **no** cambia actualmente el estado del lote a `EN_TRANSITO`; tampoco hay rutas propias para cerrar el lote. |
-| Despacho | `PREPARADO`, `EN_TRANSITO`, `RECIBIDO`, `CANCELADO` | Alta preparado; `/iniciar` pasa a tránsito; recepción B06 conforme/observada pasa a recibido; cancelación B04 o recepción rechazada lo cancela. `/entregar` y `/recibir` devuelven 409. |
+| Lote | `CREADO`, `EN_TRANSITO`, `RECIBIDO`, `EN_CUARENTENA`, `LIBERADO`, `CERRADO` | Alta creado; recepción conforme u observada lo lleva a recibido; apertura de cuarentena a en cuarentena; resolución puede liberar o mantener la retención. Iniciar un despacho transiciona de forma atómica el lote de `CREADO` a `EN_TRANSITO`; si el lote está en `EN_CUARENTENA` o `CERRADO`, la operación se rechaza con `409 STATE_CONFLICT`. Admite generación masiva de unidades vía `POST /api/lotes/{id}/unidades`. |
+| Despacho | `PREPARADO`, `EN_TRANSITO`, `RECIBIDO`, `CANCELADO` | Alta preparado; `/iniciar` pasa a tránsito (y transiciona el lote si está creado); recepción B06 conforme/observada pasa a recibido; cancelación B04 o recepción rechazada lo cancela. `/entregar` y `/recibir` devuelven 409. |
 | Recepción | `CONFORME`, `OBSERVADA`, `RECHAZADA` | Se registra mediante `POST`; observada deja despacho recibido pero no habilita dispensación B08; rechazada cancela despacho. No hay resolución posterior de observación. |
 | Cuarentena | `ABIERTA`, `LIBERADA`, `MANTENIDA` | Apertura, resolución por `/resolver`, `/liberar` o `/mantener`; una cuarentena resuelta no puede editarse con `PUT`. |
-| Unidad | `DISPONIBLE`, `DISPENSADA`, `BLOQUEADA` | Alta disponible; dispensación la cambia a dispensada. `BLOQUEADA` existe y genera advertencia pública, pero no hay ruta propia para bloquear. |
+| Unidad | `DISPONIBLE`, `DISPENSADA`, `BLOQUEADA` | Alta disponible (individual o por lote); dispensación la cambia a dispensada. `BLOQUEADA` existe y genera advertencia pública, pero no hay ruta propia para bloquear. |
 | Reporte | `PENDIENTE`, `EN_REVISION`, `RESUELTO` | Alta pendiente; revisión y resolución tienen rutas específicas; `PUT` genérico no cambia estado ni modifica reportes resueltos. |
-| Evento de custodia | Tipos `LOTE_DESPACHADO`, `CUSTODIA_ASUMIDA`, `TELEMETRIA_REGISTRADA`, `RECEPCION_CONFIRMADA`, `RECEPCION_RECHAZADA`, `DESPACHO_CANCELADO`, `CUARENTENA_ABIERTA`, `CUARENTENA_RESUELTA`, `UNIDAD_DISPENSADA` | Hitos asociados a despacho; `hashAnterior` y `hashEvento` son hashes SHA-256 locales demostrativos, no bloques distribuidos. |
+| Evento de custodia | Tipos `LOTE_DESPACHADO`, `CUSTODIA_ASUMIDA`, `TELEMETRIA_REGISTRADA`, `RECEPCION_CONFIRMADA`, `RECEPCION_RECHAZADA`, `DESPACHO_CANCELADO`, `CUARENTENA_ABIERTA`, `CUARENTENA_RESUELTA`, `UNIDAD_DISPENSADA`, `INCIDENTE_EN_RUTA` | Hitos asociados a despacho; `INCIDENTE_EN_RUTA` permite al distribuidor notificar avisos de retraso en ruta. `hashAnterior` y `hashEvento` son hashes SHA-256 locales demostrativos, no bloques distribuidos. |
 
 Las transiciones inválidas lanzan `IllegalStateException` y se traducen a `409 STATE_CONFLICT`. Una relación incompatible suele producir `400 INVALID_ARGUMENT`; un ID relacionado inexistente produce `404 RESOURCE_NOT_FOUND`; un identificador duplicado o una restricción de persistencia, `409 RESOURCE_CONFLICT`.
 
 ## Error común H0
 
+Todas las respuestas de error siguen el formato estandarizado H0:
+
 ```json
 {"timestamp":"2026-10-20T12:00:00Z","status":400,"code":"VALIDATION_ERROR","message":"Error de validación","path":"/api/medicamentos","fieldErrors":[{"field":"nombre","message":"El nombre es obligatorio"}]}
 ```
 
-`fieldErrors` es `null` para errores sin campo. El manejador global asigna: `VALIDATION_ERROR` (400, `@Valid`), `INVALID_ARGUMENT` (400, argumentos de negocio), `RESOURCE_NOT_FOUND` (404), `RESOURCE_CONFLICT` (409, integridad/duplicados), `STATE_CONFLICT` (409) e `INTERNAL_ERROR` (500, imprevistos). `UNAUTHORIZED` y `FORBIDDEN` existen en el enum compartido, pero no hay autenticación ni rutas que los emitan como política de acceso. Los errores de conversión de parámetros o de JSON pueden caer en respuestas del framework o en el manejador genérico; no se garantiza H0 para esos casos. La respuesta pública no incluye DNI, correo, contactos ni GPS exacto; los módulos internos sí pueden devolver datos personales según su DTO y carecen de control de acceso en este MVP.
+`fieldErrors` es `null` para errores sin desglose por campo. El manejador global (`GlobalExceptionHandler`) mapea de forma consistente:
+- `VALIDATION_ERROR` (400): errores de Bean Validation (`MethodArgumentNotValidException`, `@Valid`).
+- `INVALID_ARGUMENT` (400): argumentos de negocio inválidos (`IllegalArgumentException`), cuerpos de solicitud ilegibles o tipos/enums inválidos en JSON (`HttpMessageNotReadableException`), parámetros con tipos no coincidentes (`MethodArgumentTypeMismatchException`, ej. `/api/lotes/abc` o `?estado=INVALIDO`), y parámetros obligatorios faltantes (`MissingServletRequestParameterException`).
+- `RESOURCE_NOT_FOUND` (404): recursos solicitados inexistentes (`ResourceNotFoundException`) y rutas web inexistentes (`NoResourceFoundException`).
+- `RESOURCE_CONFLICT` (409): conflictos de unicidad o restricciones de integridad en base de datos (`DataIntegrityViolationException`).
+- `STATE_CONFLICT` (409): transiciones de estado no permitidas para el recurso actual (`IllegalStateException`).
+- `INVALID_ARGUMENT` (405): método HTTP no permitido para la ruta invocada (`HttpRequestMethodNotSupportedException`). Se seleccionó el código existente más representativo del contrato.
+- `INTERNAL_ERROR` (500): excepciones genéricas imprevistas como último recurso, sin exponer trazas de pila ni datos sensibles.
+
+`UNAUTHORIZED` y `FORBIDDEN` existen en el enum compartido, pero no hay autenticación ni rutas que los emitan como política de acceso. La respuesta pública no incluye DNI, correo, contactos ni GPS exacto; los módulos internos sí pueden devolver datos según su DTO y carecen de control de acceso en este MVP.
 
 ## Discrepancias y pendientes técnicos
 
-- `RegistroBlockchainRequestDTO` no tiene restricciones Bean Validation y su CRUD acepta metadatos declarados; no constituye prueba criptográfica ni conexión externa.
-- `PUT /enlaces-cuit/{id}` y algunos cuerpos opcionales de transición no activan `@Valid`. El servicio aplica reglas propias; la validación de forma no es uniforme en todos los módulos.
-- Los enums de estado incluyen `CERRADO` (lote) y `BLOQUEADA` (unidad), pero no hay ruta específica para entrar a esos estados. No se anuncian como operaciones disponibles.
-- `EN_TRANSITO` existe también en el enum del lote, pero `POST /despachos-logisticos/{id}/iniciar` solo actualiza el despacho. Los filtros de recepciones priorizan `despachoLogisticoId`; los de reportes priorizan `estado`/`unidadTrazableId` y pueden ignorar `inspectorId` si se combina. Son comportamientos actuales que conviene uniformar en una tarea posterior.
-- La documentación OpenAPI se genera de las rutas actuales y no tiene anotaciones de respuesta detalladas para cada error de negocio. Los cuerpos de error H0 y las restricciones se detallan aquí; Swagger no sustituye estas reglas.
-- `DELETE` está mapeado en varios módulos por uniformidad CRUD, pero unidades, dispensaciones, cuarentenas y reportes protegen la trazabilidad mediante rechazo. Las relaciones referenciales pueden impedir otros borrados.
-- No hay migraciones versionadas. Una base MySQL preexistente que use `ddl-auto=validate` debe incorporar los nuevos valores de `TipoEventoCustodia` antes de iniciar. No se altera la base de datos durante B10.
+- **Autenticación y autorización**: los endpoints administrativos no cuentan con login, token JWT ni restricción por roles de acceso; cualquier cliente puede invocar cualquier ruta. Los roles persistidos son solo valores informativos (`SUPERADMIN`, `ANMAT`, `LABORATORIO`, `DISTRIBUIDOR`, `FARMACIA`, `PACIENTE`).
+- **Visibilidad del DNI de inspectores**: el endpoint `GET /api/inspectores` y los DTO de inspectores incluyen el DNI oficial con fines de auditoría demostrativa. Al no contar con autenticación, este dato es visible para cualquier cliente del MVP (limitación conocida).
+- **Vínculo permanente Usuario ↔ Organización**: no se encuentra implementado en el backend; el frontend resuelve la asignación de identidad mediante sesión simulada.
+- **Cuarentena automática por excursión**: ante lecturas de temperatura fuera de rango en telemetría, se registra `alertaExcursion=true`, pero el paso a `EN_CUARENTENA` permanece como operación manual.
+- **Campos de auditoría de rechazo en Enlace CUIT**: no se persiste qué inspector ni en qué fecha exacta se produjo un rechazo de enlace.
+- **Vínculo de RegistroBlockchain con lote/evento**: el módulo funciona como un CRUD de metadatos declarados de demostración con Bean Validation; no implementa vinculación criptográfica obligatoria con el lote ni conexión a una red blockchain distribuida.
+- **Migración requerida en MySQL**: para bases MySQL existentes, agregar `INCIDENTE_EN_RUTA` al tipo enum de `eventos_custodia` requiere un `ALTER TABLE` manual (ver detalle en `docs/integracion-b10.md`), ya que `ddl-auto=update` no modifica enums nativos de columnas existentes.
 
 ---
 
@@ -403,9 +416,45 @@ Esto es una **limitación aceptada** del alcance académico. En un sistema produ
 
 ---
 
-## 7. Nota sobre generación masiva
+## 7. Generación masiva de unidades trazables por lote
 
-La issue B08 implementa **alta individual** de unidades trazables (una por request). No se implementa generación masiva por cantidad en esta versión.
+Base path: `/api/lotes/{id}/unidades`
+
+```
+POST /api/lotes/{id}/unidades
+```
+
+Genera en una sola transacción un lote de $n$ unidades trazables en estado `DISPONIBLE`, asignándoles códigos QR correlativos con formato `QR-<codigoLote>-<NNNNN>` (con relleno de ceros a 5 dígitos). La numeración continúa correlativamente desde la última unidad existente del lote si ya hubiera unidades registradas.
+
+**Request body**:
+```json
+{
+  "cantidad": 10
+}
+```
+
+| Campo | Tipo | Obligatorio | Validación |
+|---|---|---|---|
+| `cantidad` | Integer | Sí | Entero entre 1 y 1000 inclusive (`@Valid`) |
+
+**Response** (`201 Created`):
+```json
+{
+  "loteId": 1,
+  "codigoLote": "LOTE-2024-001",
+  "cantidadGenerada": 10,
+  "primerCodigo": "QR-LOTE-2024-001-00001",
+  "ultimoCodigo": "QR-LOTE-2024-001-00010"
+}
+```
+
+**Errores posibles**:
+| HTTP | Código | Condición |
+|---|---|---|
+| 400 | VALIDATION_ERROR / INVALID_ARGUMENT | `cantidad` ausente, menor a 1 o mayor a 1000. |
+| 404 | RESOURCE_NOT_FOUND | Lote no encontrado para el `{id}` provisto. |
+| 409 | STATE_CONFLICT | El lote se encuentra en estado `CERRADO` o `EN_CUARENTENA`. |
+| 409 | RESOURCE_CONFLICT | Alguno de los códigos calculados ya existe previamente en el sistema. |
 
 ---
 
@@ -666,3 +715,64 @@ En estricto cumplimiento del principio de privacidad por diseño y minimización
 - En una base MySQL ya creada, el `ENUM` de `eventos_custodia.tipo_evento` debe incorporar `DESPACHO_CANCELADO` y `RECEPCION_RECHAZADA`. La configuración local `ddl-auto=update` sincroniza el esquema; una instalación que use `validate` necesita esa migración previamente.
 - Los filtros `loteId`, `distribuidorId` y `estado` de `GET /api/despachos-logisticos` se aplican conjuntamente con lógica AND.
 - `PUT /api/cuarentenas/{id}` rechaza cambios a cuarentenas `LIBERADA` o `MANTENIDA`; no altera registros ya resueltos.
+
+---
+
+## 12. Sembrado de datos de demostración (perfil `demo`)
+
+El componente `DemoDataInitializer` (`@Profile("demo")`, `ApplicationRunner`, `@Transactional`) siembra un conjunto de datos iniciales totalmente ficticios para permitir la prueba inmediata de los flujos de la interfaz de usuario sin requerir pasos previos de configuración.
+
+### Activación del perfil
+
+Para activar el sembrador demostrativo se puede:
+1. Agregar `spring.profiles.active=demo` en el archivo local no versionado `src/main/resources/application.properties`.
+2. O bien iniciar la aplicación por línea de comandos pasando la propiedad de Spring Boot:
+   ```bash
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+   ```
+   (en Windows: `.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=demo`).
+
+### Comportamiento idempotente
+
+El sembrador es **completamente idempotente**: antes de insertar cada entidad verifica su existencia en la base de datos (por correo electrónico, CUIT de organización o legajo oficial de inspector). En el arranque informa mediante logger la cantidad de registros sembrados nuevos y la cantidad de registros que ya existían previamente.
+
+### Datos sembrados (totalmente ficticios)
+
+Todos los datos utilizados son estrictamente ficticios, sin vinculación con entidades, personas, marcas ni dominios gubernamentales o comerciales reales:
+
+1. **Usuarios activos**:
+   - `superadmin@medichain.demo` (rol `SUPERADMIN`)
+   - `inspector@medichain.demo` (rol `ANMAT`)
+   - `laboratorio@medichain.demo` (rol `LABORATORIO`)
+   - `distribuidor@medichain.demo` (rol `DISTRIBUIDOR`)
+   - `farmacia@medichain.demo` (rol `FARMACIA`)
+   - `paciente@medichain.demo` (rol `PACIENTE`)
+2. **Inspector ANMAT**:
+   - Legajo: `LEG-DEMO-001`
+   - Nombre: `Auditor Sanitario Ficticio`
+   - DNI: `11222333`
+   - Correo institucional: `auditor@medichain.demo`
+   - Jefe autorizador: `Dirección de Fiscalización Ficticia`
+   - Estado: `HABILITADO`
+   - Fecha de alta: marca de tiempo en UTC
+   - Vinculado al usuario con rol `ANMAT`.
+3. **Organizaciones principales** (CUITs inventados de exactamente 11 dígitos):
+   - Laboratorio: `Laboratorio Demo Medichain Lab` (CUIT `30111111118`, tipo `LABORATORIO`)
+   - Distribuidor: `Distribuidora Demo Logística Express` (CUIT `30222222228`, tipo `DISTRIBUIDOR`)
+   - Farmacia: `Farmacia Central Demo` (CUIT `30333333338`, tipo `FARMACIA`)
+4. **Medicamento ficticio**:
+   - Nombre: `Vacuna Demostrativa Termosensible 10ml`
+   - Principio activo: `Antígeno Ficticio Demo`
+   - `requiereCadenaFrio = true`
+5. **Enlace CUIT ACTIVO**:
+   - Enlace entre el laboratorio, distribuidor y farmacia principales sembrados.
+   - Estado: `ACTIVO`.
+   - Aprobado por el inspector sembrado con fecha de auditoría en UTC y número de disposición `DISP-DEMO-2026-001`.
+   - Permite despachar lotes de prueba inmediatamente sin requerir trámites administrativos previos.
+6. **Organizaciones y Enlace CUIT PENDIENTE para demostración en vivo**:
+   - Laboratorio secundario: `Laboratorio Innovación Demo` (CUIT `30444444448`, tipo `LABORATORIO`).
+   - Farmacia secundaria: `Farmacia Sanitaria Demo` (CUIT `30555555558`, tipo `FARMACIA`).
+   - Enlace CUIT en estado `PENDIENTE` entre el laboratorio secundario, el distribuidor sembrado y la farmacia secundaria, sin inspector asignado ni fecha de aprobación.
+   - Permite al usuario demostrar la aprobación o rechazo en vivo desde la pantalla de auditoría ANMAT.
+
+> **Aclaración de seguridad y roles**: El backend académico no implementa autenticación ni autorización. El rol `SUPERADMIN` es únicamente un valor dentro del enum `RolUsuario` persistido en la base de datos; no provee credenciales, permisos elevados ni control de acceso al API. De la misma forma, el DNI del inspector es un dato administrativo visible públicamente en las respuestas JSON para soporte de la pantalla de auditoría.

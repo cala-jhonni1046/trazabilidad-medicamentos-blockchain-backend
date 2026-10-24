@@ -29,8 +29,12 @@ public class EnlaceCUITController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EnlaceCUITResponseDTO>> getAll(@RequestParam(required = false) EstadoEnlaceCuit estado) {
-        List<EnlaceCUITResponseDTO> dtoList = service.getAll(estado).stream()
+    public ResponseEntity<List<EnlaceCUITResponseDTO>> getAll(
+            @RequestParam(required = false) EstadoEnlaceCuit estado,
+            @RequestParam(required = false) Long laboratorioId,
+            @RequestParam(required = false) Long distribuidorId,
+            @RequestParam(required = false) Long farmaciaId) {
+        List<EnlaceCUITResponseDTO> dtoList = service.getAll(estado, laboratorioId, distribuidorId, farmaciaId).stream()
                 .map(mapper::toResponseDTO)
                 .toList();
         return ResponseEntity.ok(dtoList);
@@ -50,7 +54,7 @@ public class EnlaceCUITController {
 
     @PutMapping("/{id}")
     public ResponseEntity<EnlaceCUITResponseDTO> update(@PathVariable Long id,
-                                                        @RequestBody EnlaceCUITRequestDTO requestDTO) {
+                                                        @Valid @RequestBody EnlaceCUITRequestDTO requestDTO) {
         EnlaceCUIT enlaceCUITActualizado = service.update(id, requestDTO);
         return ResponseEntity.ok(mapper.toResponseDTO(enlaceCUITActualizado));
     }

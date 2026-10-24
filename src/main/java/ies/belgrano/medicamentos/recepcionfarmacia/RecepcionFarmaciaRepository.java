@@ -25,4 +25,16 @@ public interface RecepcionFarmaciaRepository extends JpaRepository<RecepcionFarm
     List<RecepcionFarmacia> findByDespachoLogisticoLoteIdAndFarmaciaId(Long loteId, Long farmaciaId);
 
     List<RecepcionFarmacia> findAllByOrderByFechaHoraRecepcionDescIdDesc();
+
+    @org.springframework.data.jpa.repository.Query("""
+            select r from RecepcionFarmacia r
+            where (:despachoLogisticoId is null or r.despachoLogistico.id = :despachoLogisticoId)
+              and (:farmaciaId is null or r.farmacia.id = :farmaciaId)
+              and (:estadoConformidad is null or r.estadoConformidad = :estadoConformidad)
+            order by r.fechaHoraRecepcion desc, r.id desc
+            """)
+    List<RecepcionFarmacia> findByFiltros(
+            @org.springframework.data.repository.query.Param("despachoLogisticoId") Long despachoLogisticoId,
+            @org.springframework.data.repository.query.Param("farmaciaId") Long farmaciaId,
+            @org.springframework.data.repository.query.Param("estadoConformidad") EstadoRecepcion estadoConformidad);
 }

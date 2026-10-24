@@ -31,19 +31,10 @@ public class ReporteCiudadanoService {
 
     @Transactional(readOnly = true)
     public List<ReporteCiudadano> getAll(EstadoReporte estado, Long unidadTrazableId, Long inspectorId) {
-        if (estado != null && unidadTrazableId != null) {
-            return repo.findByEstadoAndUnidadTrazableId(estado, unidadTrazableId);
+        if (estado == null && unidadTrazableId == null && inspectorId == null) {
+            return repo.findAll();
         }
-        if (estado != null) {
-            return repo.findByEstado(estado);
-        }
-        if (unidadTrazableId != null) {
-            return repo.findByUnidadTrazableId(unidadTrazableId);
-        }
-        if (inspectorId != null) {
-            return repo.findByInspectorId(inspectorId);
-        }
-        return repo.findAll();
+        return repo.findByFiltros(estado, unidadTrazableId, inspectorId);
     }
 
     @Transactional(readOnly = true)

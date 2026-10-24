@@ -31,8 +31,9 @@ public class UnidadTrazableController {
     @GetMapping
     public ResponseEntity<List<UnidadTrazableResponseDTO>> getAll(
             @RequestParam(required = false) Long loteId,
-            @RequestParam(required = false) String codigoQr) {
-        List<UnidadTrazableResponseDTO> lista = service.getAll(loteId, codigoQr).stream()
+            @RequestParam(required = false) String codigoQr,
+            @RequestParam(required = false) EstadoUnidadTrazable estado) {
+        List<UnidadTrazableResponseDTO> lista = service.getAll(loteId, codigoQr, estado).stream()
                 .map(mapper::toResponseDTO)
                 .toList();
         return ResponseEntity.ok(lista);

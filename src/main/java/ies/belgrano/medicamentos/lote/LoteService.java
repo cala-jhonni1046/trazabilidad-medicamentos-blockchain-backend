@@ -1,5 +1,6 @@
 package ies.belgrano.medicamentos.lote;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,6 +14,8 @@ import ies.belgrano.medicamentos.medicamento.MedicamentoRepository;
 import ies.belgrano.medicamentos.organizacion.Organizacion;
 import ies.belgrano.medicamentos.organizacion.OrganizacionRepository;
 import ies.belgrano.medicamentos.organizacion.TipoOrganizacion;
+import ies.belgrano.medicamentos.unidadTrazable.EstadoUnidadTrazable;
+import ies.belgrano.medicamentos.unidadTrazable.UnidadTrazable;
 import ies.belgrano.medicamentos.unidadTrazable.UnidadTrazableRepository;
 
 @Service
@@ -38,15 +41,26 @@ public class LoteService {
 
     @Transactional(readOnly = true)
     public List<Lote> getAll() {
-        return loteRepository.findAll();
+        return getAll(null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Lote> getAll(Long medicamentoId, Long laboratorioId, EstadoLote estado) {
+        if (medicamentoId != null && !medicamentoRepository.existsById(medicamentoId)) {
+            throw new ResourceNotFoundException("Medicamento no encontrado con ID: " + medicamentoId);
+        }
+        if (laboratorioId != null && !organizacionRepository.existsById(laboratorioId)) {
+            throw new ResourceNotFoundException("Laboratorio no encontrado con ID: " + laboratorioId);
+        }
+        if (medicamentoId == null && laboratorioId == null && estado == null) {
+            return loteRepository.findAll();
+        }
+        return loteRepository.findByFiltros(medicamentoId, laboratorioId, estado);
     }
 
     @Transactional(readOnly = true)
     public List<Lote> getByMedicamentoId(Long medicamentoId) {
-        if (!medicamentoRepository.existsById(medicamentoId)) {
-            throw new ResourceNotFoundException("Medicamento no encontrado con ID: " + medicamentoId);
-        }
-        return loteRepository.findByMedicamentoId(medicamentoId);
+        return getAll(medicamentoId, null, null);
     }
 
     @Transactional(readOnly = true)
@@ -161,5 +175,70 @@ public class LoteService {
             throw new DataIntegrityViolationException(
                     "No es posible eliminar el lote con ID " + id + " debido a dependencias con otros registros.");
         }
+    }
+
+    @Transactional
+    public GeneracionUnidadesResponseDTO generarUnidades(Long id, GenerarUnidadesRequestDTO dto) {
+        if (dto == null || dto.getCantidad() == null || dto.getCantidad() < 1 || dto.getCantidad() > 1000) {
+            throw new IllegalArgumentException("La cantidad debe ser un número entero entre 1 y 1000.");
+        }
+
+        Lote lote = getById(id);
+
+        if (lote.getEstado() == EstadoLote.CERRADO || lote.getEstado() == EstadoLote.EN_CUARENTENA) {
+            throw new IllegalStateException("No se pueden generar unidades para un lote en estado " + lote.getEstado() + ".");
+        }
+
+        int cantidad = dto.getCantidad();
+        String codigoLote = lote.getCodigoLote();
+        String prefix = "QR-" + codigoLote + "-";
+
+        List<UnidadTrazable> unidadesExistentes = unidadTrazableRepository.findByLoteId(id);
+        int maxNumero = 0;
+        for (UnidadTrazable u : unidadesExistentes) {
+            String qr = u.getCodigoUnicoQR();
+            if (qr != null && qr.startsWith(prefix)) {
+                String sub = qr.substring(prefix.length());
+                try {
+                    int num = Integer.parseInt(sub);
+                    if (num > maxNumero) {
+                        maxNumero = num;
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        if (maxNumero == 0 && !unidadesExistentes.isEmpty()) {
+            maxNumero = unidadesExistentes.size();
+        }
+
+        List<String> codigos = new ArrayList<>(cantidad);
+        for (int i = 1; i <= cantidad; i++) {
+            int correlativo = maxNumero + i;
+            codigos.add(String.format("QR-%s-%05d", codigoLote, correlativo));
+        }
+
+        // Validación de no colisión en una sola consulta para evitar N+1
+        List<UnidadTrazable> colisiones = unidadTrazableRepository.findByCodigoUnicoQRIn(codigos);
+        if (!colisiones.isEmpty()) {
+            throw new DataIntegrityViolationException("Ya existe una unidad trazable registrada con el código: "
+                    + colisiones.get(0).getCodigoUnicoQR());
+        }
+
+        List<UnidadTrazable> nuevasUnidades = new ArrayList<>(cantidad);
+        for (String qr : codigos) {
+            UnidadTrazable u = new UnidadTrazable();
+            u.setLote(lote);
+            u.setCodigoUnicoQR(qr);
+            u.setEstado(EstadoUnidadTrazable.DISPONIBLE);
+            nuevasUnidades.add(u);
+        }
+
+        unidadTrazableRepository.saveAll(nuevasUnidades);
+
+        String primerCodigo = codigos.get(0);
+        String ultimoCodigo = codigos.get(codigos.size() - 1);
+
+        return new GeneracionUnidadesResponseDTO(lote.getId(), codigoLote, cantidad, primerCodigo, ultimoCodigo);
     }
 }
