@@ -2,11 +2,18 @@ package ies.belgrano.medicamentos.blockchain.registroblockchain;
 
 import java.time.LocalDateTime;
 
+import jakarta.validation.constraints.Size;
+
 public class RegistroBlockchainRequestDTO {
 
+    @Size(max = 128, message = "El hash de transacción no puede superar los 128 caracteres")
     private String transactionHash;
+
     private Long bloque;
+
+    @Size(max = 512, message = "La firma de inspector no puede superar los 512 caracteres")
     private String firmaInspectorANMAT;
+
     private LocalDateTime timestamp;
     private Boolean confirmado;
 

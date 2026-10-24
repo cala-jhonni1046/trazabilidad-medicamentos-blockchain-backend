@@ -38,10 +38,14 @@ public interface DespachoLogisticoRepository extends JpaRepository<DespachoLogis
             where (:loteId is null or d.lote.id = :loteId)
               and (:distribuidorId is null or d.distribuidor.id = :distribuidorId)
               and (:estado is null or d.estado = :estado)
+              and (:laboratorioId is null or d.lote.laboratorio.id = :laboratorioId)
+              and (:farmaciaDestinoId is null or d.enlaceCuit.farmacia.id = :farmaciaDestinoId)
             """)
     List<DespachoLogistico> findByFiltros(@Param("loteId") Long loteId,
                                          @Param("distribuidorId") Long distribuidorId,
-                                         @Param("estado") EstadoDespacho estado);
+                                         @Param("estado") EstadoDespacho estado,
+                                         @Param("laboratorioId") Long laboratorioId,
+                                         @Param("farmaciaDestinoId") Long farmaciaDestinoId);
 
     Optional<DespachoLogistico> findByNumeroRemito(String numeroRemito);
 

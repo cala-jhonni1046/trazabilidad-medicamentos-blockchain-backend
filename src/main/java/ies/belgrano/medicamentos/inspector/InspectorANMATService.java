@@ -26,7 +26,23 @@ public class InspectorANMATService {
 
     @Transactional(readOnly = true)
     public List<InspectorANMAT> getAll() {
-        return inspectorRepository.findAll();
+        return getAll(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<InspectorANMAT> getAll(String dni) {
+        List<InspectorANMAT> todos = inspectorRepository.findAll();
+        if (dni == null || dni.isBlank()) {
+            return todos;
+        }
+        String dniNormalizado = normalizarDni(dni);
+        return todos.stream()
+                .filter(i -> i.getDni() != null && normalizarDni(i.getDni()).equals(dniNormalizado))
+                .toList();
+    }
+
+    private String normalizarDni(String val) {
+        return val.replaceAll("[.\\s]", "");
     }
 
     @Transactional(readOnly = true)

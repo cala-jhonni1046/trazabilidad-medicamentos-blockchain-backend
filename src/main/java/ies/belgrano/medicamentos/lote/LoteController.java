@@ -29,10 +29,11 @@ public class LoteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LoteResponseDTO>> getAll(@RequestParam(required = false) Long medicamentoId) {
-        List<Lote> lotes = (medicamentoId != null)
-                ? service.getByMedicamentoId(medicamentoId)
-                : service.getAll();
+    public ResponseEntity<List<LoteResponseDTO>> getAll(
+            @RequestParam(required = false) Long medicamentoId,
+            @RequestParam(required = false) Long laboratorioId,
+            @RequestParam(required = false) EstadoLote estado) {
+        List<Lote> lotes = service.getAll(medicamentoId, laboratorioId, estado);
         List<LoteResponseDTO> dtoList = lotes.stream()
                 .map(mapper::toResponseDTO)
                 .toList();
@@ -49,6 +50,14 @@ public class LoteController {
     public ResponseEntity<LoteResponseDTO> create(@Valid @RequestBody LoteRequestDTO requestDTO) {
         Lote loteCreado = service.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(loteCreado));
+    }
+
+    @PostMapping("/{id}/unidades")
+    public ResponseEntity<GeneracionUnidadesResponseDTO> generarUnidades(
+            @PathVariable Long id,
+            @Valid @RequestBody GenerarUnidadesRequestDTO requestDTO) {
+        GeneracionUnidadesResponseDTO resumen = service.generarUnidades(id, requestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resumen);
     }
 
     @PutMapping("/{id}")

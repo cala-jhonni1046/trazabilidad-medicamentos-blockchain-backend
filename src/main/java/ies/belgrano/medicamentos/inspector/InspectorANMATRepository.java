@@ -16,5 +16,7 @@ public interface InspectorANMATRepository extends JpaRepository<InspectorANMAT, 
 
 	boolean existsByLegajoOficial(String legajoOficial);
 
+	Optional<InspectorANMAT> findByLegajoOficial(String legajoOficial);
+
 	boolean existsByLegajoOficialAndIdNot(String legajoOficial, Long id);
 }

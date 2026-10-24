@@ -15,4 +15,15 @@ public interface ReporteCiudadanoRepository extends JpaRepository<ReporteCiudada
     List<ReporteCiudadano> findByInspectorId(Long inspectorId);
 
     List<ReporteCiudadano> findByEstadoAndUnidadTrazableId(EstadoReporte estado, Long unidadTrazableId);
+
+    @org.springframework.data.jpa.repository.Query("""
+            select r from ReporteCiudadano r
+            where (:estado is null or r.estado = :estado)
+              and (:unidadTrazableId is null or r.unidadTrazable.id = :unidadTrazableId)
+              and (:inspectorId is null or r.inspector.id = :inspectorId)
+            """)
+    List<ReporteCiudadano> findByFiltros(
+            @org.springframework.data.repository.query.Param("estado") EstadoReporte estado,
+            @org.springframework.data.repository.query.Param("unidadTrazableId") Long unidadTrazableId,
+            @org.springframework.data.repository.query.Param("inspectorId") Long inspectorId);
 }

@@ -24,24 +24,25 @@ public class UnidadTrazableService {
     }
 
     @Transactional(readOnly = true)
+    public List<UnidadTrazable> getAll(Long loteId, String codigoQr, EstadoUnidadTrazable estado) {
+        if (loteId != null && !loteRepo.existsById(loteId)) {
+            throw new ResourceNotFoundException("Lote no encontrado con ID: " + loteId);
+        }
+        String qr = (codigoQr != null && !codigoQr.isBlank()) ? codigoQr.trim() : null;
+        if (loteId == null && qr == null && estado == null) {
+            return repo.findAll();
+        }
+        return repo.findByFiltros(loteId, qr, estado);
+    }
+
+    @Transactional(readOnly = true)
     public List<UnidadTrazable> getAll(Long loteId, String codigoQr) {
-        if (codigoQr != null && !codigoQr.isBlank()) {
-            return repo.findByCodigoUnicoQR(codigoQr.trim())
-                    .map(List::of)
-                    .orElse(Collections.emptyList());
-        }
-        if (loteId != null) {
-            if (!loteRepo.existsById(loteId)) {
-                throw new ResourceNotFoundException("Lote no encontrado con ID: " + loteId);
-            }
-            return repo.findByLoteId(loteId);
-        }
-        return repo.findAll();
+        return getAll(loteId, codigoQr, null);
     }
 
     @Transactional(readOnly = true)
     public List<UnidadTrazable> getAll() {
-        return getAll(null, null);
+        return getAll(null, null, null);
     }
 
     @Transactional(readOnly = true)
