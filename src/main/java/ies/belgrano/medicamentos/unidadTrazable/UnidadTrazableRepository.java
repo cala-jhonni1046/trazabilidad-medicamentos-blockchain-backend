@@ -22,6 +22,22 @@ public interface UnidadTrazableRepository extends JpaRepository<UnidadTrazable, 
 
     @org.springframework.data.jpa.repository.Query("""
             select u from UnidadTrazable u
+            where (u.lote.laboratorio.id = :orgId
+                   or exists (select d.id from DespachoLogistico d
+                              where d.lote = u.lote
+                                and (d.distribuidor.id = :orgId or d.enlaceCuit.farmacia.id = :orgId)))
+              and (:loteId is null or u.lote.id = :loteId)
+              and (:codigoQr is null or u.codigoUnicoQR = :codigoQr)
+              and (:estado is null or u.estado = :estado)
+            """)
+    java.util.List<UnidadTrazable> findVisiblesPorOrganizacion(
+            @org.springframework.data.repository.query.Param("orgId") Long orgId,
+            @org.springframework.data.repository.query.Param("loteId") Long loteId,
+            @org.springframework.data.repository.query.Param("codigoQr") String codigoQr,
+            @org.springframework.data.repository.query.Param("estado") EstadoUnidadTrazable estado);
+
+    @org.springframework.data.jpa.repository.Query("""
+            select u from UnidadTrazable u
             where (:loteId is null or u.lote.id = :loteId)
               and (:codigoQr is null or u.codigoUnicoQR = :codigoQr)
               and (:estado is null or u.estado = :estado)

@@ -17,6 +17,11 @@ public class UsuarioRequestDTO {
 
     private Boolean activo;
 
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres.")
+    private String password;
+
+    private Long organizacionId;
+
     public UsuarioRequestDTO() {
     }
 
@@ -24,6 +29,14 @@ public class UsuarioRequestDTO {
         this.email = email;
         this.rol = rol;
         this.activo = activo;
+    }
+
+    public UsuarioRequestDTO(String email, RolUsuario rol, Boolean activo, String password, Long organizacionId) {
+        this.email = email;
+        this.rol = rol;
+        this.activo = activo;
+        this.password = password;
+        this.organizacionId = organizacionId;
     }
 
     public String getEmail() {
@@ -48,5 +61,21 @@ public class UsuarioRequestDTO {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Long getOrganizacionId() {
+        return organizacionId;
+    }
+
+    public void setOrganizacionId(Long organizacionId) {
+        this.organizacionId = organizacionId;
     }
 }

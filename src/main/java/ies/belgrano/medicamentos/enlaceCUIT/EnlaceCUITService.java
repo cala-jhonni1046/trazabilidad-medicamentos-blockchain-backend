@@ -5,6 +5,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import ies.belgrano.medicamentos.security.AccesoOrganizacion;
+import ies.belgrano.medicamentos.security.AuthUser;
+import ies.belgrano.medicamentos.usuario.RolUsuario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +25,16 @@ public class EnlaceCUITService {
     private final EnlaceCUITRepository enlaceRepo;
     private final OrganizacionRepository organizacionRepo;
     private final InspectorANMATRepository inspectorRepo;
+    private final AccesoOrganizacion acceso;
 
     public EnlaceCUITService(EnlaceCUITRepository enlaceRepo,
                              OrganizacionRepository organizacionRepo,
-                             InspectorANMATRepository inspectorRepo) {
+                             InspectorANMATRepository inspectorRepo,
+                             AccesoOrganizacion acceso) {
         this.enlaceRepo = enlaceRepo;
         this.organizacionRepo = organizacionRepo;
         this.inspectorRepo = inspectorRepo;
+        this.acceso = acceso;
     }
 
     @Transactional(readOnly = true)
@@ -38,6 +44,14 @@ public class EnlaceCUITService {
 
     @Transactional(readOnly = true)
     public List<EnlaceCUIT> getAll(EstadoEnlaceCuit estado, Long laboratorioId, Long distribuidorId, Long farmaciaId) {
+        if (!acceso.esAdminOGlobal()) {
+            // Empresas: solo los enlaces en los que participan
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null) {
+                return List.of();
+            }
+            return enlaceRepo.findVisiblesPorOrganizacion(orgId, estado, laboratorioId, distribuidorId, farmaciaId);
+        }
         if (estado == null && laboratorioId == null && distribuidorId == null && farmaciaId == null) {
             return enlaceRepo.findAll();
         }
@@ -46,8 +60,44 @@ public class EnlaceCUITService {
 
     @Transactional(readOnly = true)
     public EnlaceCUIT getById(Long id) {
-        return enlaceRepo.findById(id)
+        EnlaceCUIT enlace = enlaceRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Enlace CUIT no encontrado con ID: " + id));
+        // 404 si la organización del usuario no participa del enlace (SUPERADMIN/ANMAT pasan)
+        acceso.verificarAccesoMultiple(enlace.getLaboratorio().getId(),
+                enlace.getDistribuidor().getId(), enlace.getFarmacia().getId());
+        return enlace;
+    }
+
+    /** Escritura: solo el laboratorio titular del enlace (o SUPERADMIN/ANMAT, filtrados por rol en SecurityConfig). */
+    private EnlaceCUIT getPropio(Long id) {
+        EnlaceCUIT enlace = getById(id);
+        acceso.verificarAcceso(enlace.getLaboratorio().getId());
+        return enlace;
+    }
+
+    /**
+     * El inspector que resuelve un enlace sale del usuario autenticado cuando es ANMAT (no se puede
+     * firmar en nombre de otro inspector). SUPERADMIN indica el inspector en el pedido.
+     */
+    private InspectorANMAT resolverInspector(EnlaceResolucionRequestDTO resolucion, String accion) {
+        AuthUser au = acceso.getAuthUser();
+        InspectorANMAT inspector;
+        if (au != null && au.getRol() == RolUsuario.ANMAT) {
+            inspector = inspectorRepo.findByUsuarioId(au.getId())
+                    .orElseThrow(() -> new IllegalStateException("Este usuario ANMAT no tiene perfil de inspector."));
+        } else {
+            Long inspectorId = resolucion.getInspectorId();
+            if (inspectorId == null) {
+                throw new IllegalArgumentException("El ID del inspector es obligatorio para " + accion + ".");
+            }
+            inspector = inspectorRepo.findById(inspectorId)
+                    .orElseThrow(() -> new ResourceNotFoundException("No se encontró el inspector ANMAT con ID: " + inspectorId));
+        }
+        if (inspector.getEstado() != EstadoInspector.HABILITADO) {
+            throw new IllegalStateException("El inspector ANMAT con ID " + inspector.getId()
+                    + " no se encuentra activo/habilitado (estado actual: " + inspector.getEstado() + ").");
+        }
+        return inspector;
     }
 
     @Transactional
@@ -59,10 +109,19 @@ public class EnlaceCUITService {
             throw new IllegalArgumentException("El request de creación no puede asignar un inspector aprobador.");
         }
 
-        Organizacion lab = organizacionRepo.findById(dto.getLaboratorioId())
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró la organización de laboratorio con ID: " + dto.getLaboratorioId()));
+        // Un laboratorio solo solicita enlaces a su nombre: se ignora el laboratorioId del pedido.
+        Long laboratorioId = acceso.organizacionObligatoria();
+        if (laboratorioId == null) {
+            laboratorioId = dto.getLaboratorioId(); // SUPERADMIN
+        }
+        if (laboratorioId == null) {
+            throw new IllegalArgumentException("El ID de laboratorio es obligatorio.");
+        }
+        final Long labId = laboratorioId;
+        Organizacion lab = organizacionRepo.findById(labId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró la organización de laboratorio con ID: " + labId));
         if (lab.getTipo() != TipoOrganizacion.LABORATORIO) {
-            throw new IllegalArgumentException("La organización con ID " + dto.getLaboratorioId() + " no es de tipo LABORATORIO (tipo actual: " + lab.getTipo() + ").");
+            throw new IllegalArgumentException("La organización con ID " + labId + " no es de tipo LABORATORIO (tipo actual: " + lab.getTipo() + ").");
         }
 
         Organizacion dist = organizacionRepo.findById(dto.getDistribuidorId())
@@ -93,7 +152,7 @@ public class EnlaceCUITService {
 
     @Transactional
     public EnlaceCUIT update(Long id, EnlaceCUITRequestDTO dto) {
-        EnlaceCUIT existente = getById(id);
+        EnlaceCUIT existente = getPropio(id);
 
         if (dto.getEstado() != null && dto.getEstado() != existente.getEstado()) {
             throw new IllegalStateException("No está permitido modificar el estado mediante PUT genérico. Use las operaciones de aprobación o rechazo.");
@@ -118,17 +177,7 @@ public class EnlaceCUITService {
             throw new IllegalStateException("Solo se puede aprobar un enlace en estado PENDIENTE. Estado actual: " + enlace.getEstado());
         }
 
-        Long inspectorId = resolucion.getInspectorId();
-        if (inspectorId == null) {
-            throw new IllegalArgumentException("El ID del inspector es obligatorio para la aprobación.");
-        }
-
-        InspectorANMAT inspector = inspectorRepo.findById(inspectorId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el inspector ANMAT con ID: " + inspectorId));
-
-        if (inspector.getEstado() != EstadoInspector.HABILITADO) {
-            throw new IllegalStateException("El inspector ANMAT con ID " + inspectorId + " no se encuentra activo/habilitado (estado actual: " + inspector.getEstado() + ").");
-        }
+        InspectorANMAT inspector = resolverInspector(resolucion, "la aprobación");
 
         enlace.setEstado(EstadoEnlaceCuit.ACTIVO);
         enlace.setInspectorAprobador(inspector);
@@ -152,17 +201,8 @@ public class EnlaceCUITService {
             throw new IllegalStateException("Solo se puede rechazar un enlace en estado PENDIENTE. Estado actual: " + enlace.getEstado());
         }
 
-        Long inspectorId = resolucion.getInspectorId();
-        if (inspectorId == null) {
-            throw new IllegalArgumentException("El ID del inspector es obligatorio para el rechazo.");
-        }
-
-        InspectorANMAT inspector = inspectorRepo.findById(inspectorId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el inspector ANMAT con ID: " + inspectorId));
-
-        if (inspector.getEstado() != EstadoInspector.HABILITADO) {
-            throw new IllegalStateException("El inspector ANMAT con ID " + inspectorId + " no se encuentra activo/habilitado (estado actual: " + inspector.getEstado() + ").");
-        }
+        // Solo se valida que el inspector exista y esté habilitado; el rechazo no lo guarda en el enlace
+        resolverInspector(resolucion, "el rechazo");
 
         enlace.setEstado(EstadoEnlaceCuit.RECHAZADO);
 
@@ -178,7 +218,7 @@ public class EnlaceCUITService {
 
     @Transactional
     public void delete(Long id) {
-        EnlaceCUIT enlace = getById(id);
+        EnlaceCUIT enlace = getPropio(id);
         try {
             enlaceRepo.delete(enlace);
             enlaceRepo.flush();

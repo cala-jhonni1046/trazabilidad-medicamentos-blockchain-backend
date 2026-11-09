@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import ies.belgrano.medicamentos.security.AccesoOrganizacion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,17 +32,20 @@ public class DespachoLogisticoService {
     private final LoteRepository loteRepo;
     private final OrganizacionRepository organizacionRepo;
     private final EnlaceCUITRepository enlaceRepo;
+    private final AccesoOrganizacion acceso;
 
     public DespachoLogisticoService(DespachoLogisticoRepository despachoRepo,
                                     EventoCustodiaRepository eventoRepo,
                                     LoteRepository loteRepo,
                                     OrganizacionRepository organizacionRepo,
-                                    EnlaceCUITRepository enlaceRepo) {
+                                    EnlaceCUITRepository enlaceRepo,
+                                    AccesoOrganizacion acceso) {
         this.despachoRepo = despachoRepo;
         this.eventoRepo = eventoRepo;
         this.loteRepo = loteRepo;
         this.organizacionRepo = organizacionRepo;
         this.enlaceRepo = enlaceRepo;
+        this.acceso = acceso;
     }
 
     @Transactional(readOnly = true)
@@ -52,6 +56,15 @@ public class DespachoLogisticoService {
     @Transactional(readOnly = true)
     public List<DespachoLogistico> getAll(Long loteId, Long distribuidorId, EstadoDespacho estado,
                                           Long laboratorioId, Long farmaciaDestinoId) {
+        if (!acceso.esAdminOGlobal()) {
+            // Empresas: solo los despachos en los que participan
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null) {
+                return List.of();
+            }
+            return despachoRepo.findVisiblesPorOrganizacion(orgId, loteId, distribuidorId, estado,
+                    laboratorioId, farmaciaDestinoId);
+        }
         if (loteId == null && distribuidorId == null && estado == null && laboratorioId == null && farmaciaDestinoId == null) {
             return despachoRepo.findAll();
         }
@@ -60,8 +73,32 @@ public class DespachoLogisticoService {
 
     @Transactional(readOnly = true)
     public DespachoLogistico getById(Long id) {
+        DespachoLogistico despacho = cargar(id);
+        // 404 si la organización no participa del despacho (SUPERADMIN/ANMAT pasan)
+        acceso.verificarAccesoMultiple(laboratorioId(despacho), despacho.getDistribuidor().getId(),
+                farmaciaId(despacho));
+        return despacho;
+    }
+
+    /** Escritura: solo el laboratorio del lote o el distribuidor (la farmacia únicamente recibe). */
+    private DespachoLogistico getGestionable(Long id) {
+        DespachoLogistico despacho = cargar(id);
+        acceso.verificarAccesoMultiple(laboratorioId(despacho), despacho.getDistribuidor().getId());
+        return despacho;
+    }
+
+    private DespachoLogistico cargar(Long id) {
         return despachoRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + id));
+    }
+
+    private static Long laboratorioId(DespachoLogistico d) {
+        return d.getLote() != null && d.getLote().getLaboratorio() != null ? d.getLote().getLaboratorio().getId() : null;
+    }
+
+    private static Long farmaciaId(DespachoLogistico d) {
+        return d.getEnlaceCuit() != null && d.getEnlaceCuit().getFarmacia() != null
+                ? d.getEnlaceCuit().getFarmacia().getId() : null;
     }
 
     @Transactional
@@ -95,6 +132,10 @@ public class DespachoLogisticoService {
             throw new IllegalArgumentException("La organización indicada con ID " + dto.getDistribuidorId()
                     + " no es de tipo DISTRIBUIDOR (tipo actual: " + distribuidor.getTipo() + ").");
         }
+
+        // Solo el laboratorio dueño del lote o el distribuidor del despacho pueden crearlo
+        Long laboratorioDelLoteId = lote.getLaboratorio() != null ? lote.getLaboratorio().getId() : null;
+        acceso.verificarAccesoMultiple(laboratorioDelLoteId, distribuidor.getId());
 
         if (dto.getEnlaceCuitId() == null) {
             throw new IllegalArgumentException("El ID de enlace CUIT es obligatorio.");
@@ -172,7 +213,7 @@ public class DespachoLogisticoService {
 
     @Transactional
     public DespachoLogistico update(Long id, DespachoLogisticoRequestDTO dto) {
-        DespachoLogistico existente = getById(id);
+        DespachoLogistico existente = getGestionable(id);
 
         if (existente.getEstado() == EstadoDespacho.CANCELADO || existente.getEstado() == EstadoDespacho.RECIBIDO) {
             throw new IllegalStateException("No se puede modificar un despacho en estado terminal: " + existente.getEstado());
@@ -240,7 +281,7 @@ public class DespachoLogisticoService {
 
     @Transactional
     public DespachoLogistico iniciarDespacho(Long id, TransicionDespachoRequestDTO dto) {
-        DespachoLogistico despacho = getById(id);
+        DespachoLogistico despacho = getGestionable(id);
 
         if (despacho.getEstado() != EstadoDespacho.PREPARADO) {
             throw new IllegalStateException("Solo se puede iniciar un despacho en estado PREPARADO. Estado actual: " + despacho.getEstado());
@@ -281,7 +322,7 @@ public class DespachoLogisticoService {
 
     @Transactional
     public DespachoLogistico cancelarDespacho(Long id, TransicionDespachoRequestDTO dto) {
-        DespachoLogistico despacho = getById(id);
+        DespachoLogistico despacho = getGestionable(id);
 
         if (despacho.getEstado() == EstadoDespacho.CANCELADO || despacho.getEstado() == EstadoDespacho.RECIBIDO) {
             throw new IllegalStateException("No se puede cancelar un despacho en estado terminal: " + despacho.getEstado());
@@ -304,7 +345,7 @@ public class DespachoLogisticoService {
 
     @Transactional
     public void delete(Long id) {
-        DespachoLogistico existente = getById(id);
+        DespachoLogistico existente = getGestionable(id);
 
         if (eventoRepo.existsByDespachoId(id)) {
             throw new DataIntegrityViolationException(
@@ -336,7 +377,11 @@ public class DespachoLogisticoService {
         }
 
         Organizacion actor = null;
-        if (dto.getOrganizacionActorId() != null) {
+        if (!acceso.esAdminOGlobal()) {
+            // El actor del evento es siempre la organización autenticada (no se puede registrar en nombre de otra)
+            actor = organizacionRepo.findById(acceso.organizacionActualId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado."));
+        } else if (dto.getOrganizacionActorId() != null) {
             actor = organizacionRepo.findById(dto.getOrganizacionActorId())
                     .orElseThrow(() -> new ResourceNotFoundException("Organización actora no encontrada con ID: " + dto.getOrganizacionActorId()));
 

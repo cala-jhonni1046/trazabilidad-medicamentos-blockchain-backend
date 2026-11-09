@@ -5,6 +5,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import ies.belgrano.medicamentos.security.AccesoOrganizacion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,17 +23,28 @@ public class CuarentenaService {
     private final CuarentenaRepository repo;
     private final LoteRepository loteRepo;
     private final InspectorANMATRepository inspectorRepo;
+    private final AccesoOrganizacion acceso;
 
     public CuarentenaService(CuarentenaRepository repo,
                              LoteRepository loteRepo,
-                             InspectorANMATRepository inspectorRepo) {
+                             InspectorANMATRepository inspectorRepo,
+                             AccesoOrganizacion acceso) {
         this.repo = repo;
         this.loteRepo = loteRepo;
         this.inspectorRepo = inspectorRepo;
+        this.acceso = acceso;
     }
 
     @Transactional(readOnly = true)
     public List<Cuarentena> getAll(Long loteId, EstadoCuarentena estado) {
+        if (!acceso.esAdminOGlobal()) {
+            // Empresas: solo cuarentenas de lotes que ven (la cuarentena la abre y resuelve ANMAT)
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null) {
+                return List.of();
+            }
+            return repo.findVisiblesPorOrganizacion(orgId, loteId, estado);
+        }
         if (loteId != null) {
             if (!loteRepo.existsById(loteId)) {
                 throw new ResourceNotFoundException("Lote no encontrado con ID: " + loteId);
@@ -50,13 +62,26 @@ public class CuarentenaService {
 
     @Transactional(readOnly = true)
     public List<Cuarentena> getAll() {
-        return repo.findAll();
+        return getAll(null, null);
     }
 
     @Transactional(readOnly = true)
     public Cuarentena getById(Long id) {
-        return repo.findById(id)
+        Cuarentena cuarentena = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cuarentena no encontrada con ID: " + id));
+        verificarLoteVisible(cuarentena.getLote().getId(), "Cuarentena no encontrada con ID: " + id);
+        return cuarentena;
+    }
+
+    /** 404 si el lote de la cuarentena no es visible para la organización (SUPERADMIN/ANMAT pasan). */
+    private void verificarLoteVisible(Long loteId, String mensaje404) {
+        if (acceso.esAdminOGlobal()) {
+            return;
+        }
+        Long orgId = acceso.organizacionActualId();
+        if (orgId == null || !loteRepo.esVisiblePorOrganizacion(loteId, orgId)) {
+            throw new ResourceNotFoundException(mensaje404);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +92,7 @@ public class CuarentenaService {
         if (!loteRepo.existsById(loteId)) {
             throw new ResourceNotFoundException("Lote no encontrado con ID: " + loteId);
         }
+        verificarLoteVisible(loteId, "Lote no encontrado con ID: " + loteId);
         return repo.findFirstByLoteIdAndEstado(loteId, EstadoCuarentena.ABIERTA)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontró ninguna cuarentena abierta para el lote con ID: " + loteId));

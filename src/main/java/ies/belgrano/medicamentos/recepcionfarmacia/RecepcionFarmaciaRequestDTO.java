@@ -16,7 +16,6 @@ public class RecepcionFarmaciaRequestDTO {
 
     private LocalDateTime fechaHoraRecepcion;
 
-    @NotNull(message = "El ID de farmacia es obligatorio.")
     private Long farmaciaId;
 
     @Size(max = 160, message = "El farmacéutico responsable no puede superar los 160 caracteres.")

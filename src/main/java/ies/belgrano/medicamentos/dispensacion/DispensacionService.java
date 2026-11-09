@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import ies.belgrano.medicamentos.security.AccesoOrganizacion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,23 +37,37 @@ public class DispensacionService {
     private final RecepcionFarmaciaRepository recepcionRepo;
     private final CuarentenaRepository cuarentenaRepo;
     private final LoteRepository loteRepo;
+    private final AccesoOrganizacion acceso;
 
     public DispensacionService(DispensacionRepository dispensacionRepo,
                                UnidadTrazableRepository unidadRepo,
                                OrganizacionRepository organizacionRepo,
                                RecepcionFarmaciaRepository recepcionRepo,
                                CuarentenaRepository cuarentenaRepo,
-                               LoteRepository loteRepo) {
+                               LoteRepository loteRepo,
+                               AccesoOrganizacion acceso) {
         this.dispensacionRepo = dispensacionRepo;
         this.unidadRepo = unidadRepo;
         this.organizacionRepo = organizacionRepo;
         this.recepcionRepo = recepcionRepo;
         this.cuarentenaRepo = cuarentenaRepo;
         this.loteRepo = loteRepo;
+        this.acceso = acceso;
     }
 
     @Transactional(readOnly = true)
     public List<Dispensacion> getAll(Long farmaciaId, Long unidadTrazableId) {
+        if (!acceso.esAdminOGlobal()) {
+            // Las dispensaciones incluyen datos del paciente: solo la farmacia que dispensó las ve
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null || (farmaciaId != null && !farmaciaId.equals(orgId))) {
+                return Collections.emptyList();
+            }
+            if (unidadTrazableId != null) {
+                return dispensacionRepo.findByFarmaciaIdAndUnidadTrazableId(orgId, unidadTrazableId);
+            }
+            return dispensacionRepo.findByFarmaciaId(orgId);
+        }
         if (farmaciaId != null && unidadTrazableId != null) {
             return dispensacionRepo.findByFarmaciaIdAndUnidadTrazableId(farmaciaId, unidadTrazableId);
         }
@@ -77,8 +92,11 @@ public class DispensacionService {
 
     @Transactional(readOnly = true)
     public Dispensacion getById(Long id) {
-        return dispensacionRepo.findById(id)
+        Dispensacion dispensacion = dispensacionRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Dispensación no encontrada con ID: " + id));
+        // 404 si la dispensación no es de la farmacia del usuario (SUPERADMIN/ANMAT pasan)
+        acceso.verificarAcceso(dispensacion.getFarmacia().getId());
+        return dispensacion;
     }
 
     @Transactional(readOnly = true)
@@ -86,9 +104,11 @@ public class DispensacionService {
         if (unidadTrazableId == null) {
             throw new IllegalArgumentException("El ID de unidad trazable es obligatorio.");
         }
-        return dispensacionRepo.findByUnidadTrazableId(unidadTrazableId)
+        Dispensacion dispensacion = dispensacionRepo.findByUnidadTrazableId(unidadTrazableId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontró ninguna dispensación registrada para la unidad trazable con ID: " + unidadTrazableId));
+        acceso.verificarAcceso(dispensacion.getFarmacia().getId());
+        return dispensacion;
     }
 
     @Transactional
@@ -101,13 +121,25 @@ public class DispensacionService {
         if (dto.getUnidadTrazableId() == null) {
             throw new IllegalArgumentException("El ID de unidad trazable es obligatorio.");
         }
-        if (dto.getFarmaciaId() == null) {
+        // La farmacia que dispensa sale del token; se ignora el farmaciaId del pedido (solo SUPERADMIN lo indica)
+        Long farmaciaIdDispensa = acceso.organizacionObligatoria();
+        if (farmaciaIdDispensa == null) {
+            farmaciaIdDispensa = dto.getFarmaciaId();
+        }
+        if (farmaciaIdDispensa == null) {
             throw new IllegalArgumentException("El ID de farmacia es obligatorio.");
         }
+        final Long farmId = farmaciaIdDispensa;
 
         // 2. Regla 1 de Elegibilidad: La unidad existe y está DISPONIBLE
         UnidadTrazable unidad = unidadRepo.findById(dto.getUnidadTrazableId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad trazable no encontrada con ID: " + dto.getUnidadTrazableId()));
+
+        // 404 si la unidad pertenece a un lote que la farmacia no tiene (sin revelar su estado)
+        if (!acceso.esAdminOGlobal() && (unidad.getLote() == null
+                || !loteRepo.esVisiblePorOrganizacion(unidad.getLote().getId(), farmId))) {
+            throw new ResourceNotFoundException("Unidad trazable no encontrada con ID: " + dto.getUnidadTrazableId());
+        }
 
         if (unidad.getEstado() != EstadoUnidadTrazable.DISPONIBLE) {
             throw new IllegalStateException("La unidad trazable con ID " + unidad.getId()
@@ -149,11 +181,11 @@ public class DispensacionService {
         }
 
         // 5. Regla 3 de Elegibilidad: La farmacia declarada existe, es tipo FARMACIA
-        Organizacion farmacia = organizacionRepo.findById(dto.getFarmaciaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Farmacia no encontrada con ID: " + dto.getFarmaciaId()));
+        Organizacion farmacia = organizacionRepo.findById(farmId)
+                .orElseThrow(() -> new ResourceNotFoundException("Farmacia no encontrada con ID: " + farmId));
 
         if (farmacia.getTipo() != TipoOrganizacion.FARMACIA) {
-            throw new IllegalArgumentException("La organización indicada con ID " + dto.getFarmaciaId()
+            throw new IllegalArgumentException("La organización indicada con ID " + farmId
                     + " no es de tipo FARMACIA (tipo actual: " + farmacia.getTipo() + ").");
         }
 

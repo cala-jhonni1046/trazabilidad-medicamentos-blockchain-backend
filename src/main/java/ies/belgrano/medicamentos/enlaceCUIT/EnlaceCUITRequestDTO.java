@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 
 public class EnlaceCUITRequestDTO {
 
-    @NotNull(message = "El ID de laboratorio es obligatorio")
     private Long laboratorioId;
 
     @NotNull(message = "El ID de distribuidor es obligatorio")

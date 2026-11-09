@@ -5,6 +5,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import ies.belgrano.medicamentos.security.AccesoOrganizacion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,21 +32,32 @@ public class RecepcionFarmaciaService {
     private final OrganizacionRepository organizacionRepo;
     private final LoteRepository loteRepo;
     private final DespachoLogisticoService despachoService;
+    private final AccesoOrganizacion acceso;
 
     public RecepcionFarmaciaService(RecepcionFarmaciaRepository recepcionRepo,
                                    DespachoLogisticoRepository despachoRepo,
                                    OrganizacionRepository organizacionRepo,
                                    LoteRepository loteRepo,
-                                   DespachoLogisticoService despachoService) {
+                                   DespachoLogisticoService despachoService,
+                                   AccesoOrganizacion acceso) {
         this.recepcionRepo = recepcionRepo;
         this.despachoRepo = despachoRepo;
         this.organizacionRepo = organizacionRepo;
         this.loteRepo = loteRepo;
         this.despachoService = despachoService;
+        this.acceso = acceso;
     }
 
     @Transactional(readOnly = true)
     public List<RecepcionFarmacia> getAll(Long despachoLogisticoId, Long farmaciaId, EstadoRecepcion estadoConformidad) {
+        if (!acceso.esAdminOGlobal()) {
+            // Empresas: la farmacia ve sus recepciones; laboratorio y distribuidor, las de sus despachos
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null) {
+                return List.of();
+            }
+            return recepcionRepo.findVisiblesPorOrganizacion(orgId, despachoLogisticoId, farmaciaId, estadoConformidad);
+        }
         if (despachoLogisticoId != null && !despachoRepo.existsById(despachoLogisticoId)) {
             throw new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + despachoLogisticoId);
         }
@@ -65,8 +77,22 @@ public class RecepcionFarmaciaService {
 
     @Transactional(readOnly = true)
     public RecepcionFarmacia getById(Long id) {
-        return recepcionRepo.findById(id)
+        RecepcionFarmacia recepcion = recepcionRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Recepción de farmacia no encontrada con ID: " + id));
+        DespachoLogistico d = recepcion.getDespachoLogistico();
+        Long labId = d != null && d.getLote() != null && d.getLote().getLaboratorio() != null
+                ? d.getLote().getLaboratorio().getId() : null;
+        Long distId = d != null && d.getDistribuidor() != null ? d.getDistribuidor().getId() : null;
+        // 404 si la organización no es la farmacia receptora ni el laboratorio/distribuidor del despacho
+        acceso.verificarAccesoMultiple(recepcion.getFarmacia().getId(), labId, distId);
+        return recepcion;
+    }
+
+    /** Escritura: solo la farmacia que registró la recepción (o SUPERADMIN). */
+    private RecepcionFarmacia getPropia(Long id) {
+        RecepcionFarmacia recepcion = getById(id);
+        acceso.verificarAcceso(recepcion.getFarmacia().getId());
+        return recepcion;
     }
 
     @Transactional
@@ -84,6 +110,11 @@ public class RecepcionFarmaciaService {
         }
         DespachoLogistico despacho = despachoRepo.findById(dto.getDespachoLogisticoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + dto.getDespachoLogisticoId()));
+
+        // Solo la farmacia de destino del despacho puede registrar su recepción (404 para las demás)
+        if (despacho.getEnlaceCuit() != null && despacho.getEnlaceCuit().getFarmacia() != null) {
+            acceso.verificarAcceso(despacho.getEnlaceCuit().getFarmacia().getId());
+        }
 
         if (recepcionRepo.existsByDespachoLogisticoId(despacho.getId())) {
             throw new DataIntegrityViolationException("Ya existe una recepción registrada para el despacho logístico con ID: " + despacho.getId());
@@ -104,14 +135,20 @@ public class RecepcionFarmaciaService {
             throw new IllegalStateException("El enlace CUIT asociado al despacho debe encontrarse en estado ACTIVO. Estado actual: " + estadoEnlace);
         }
 
-        if (dto.getFarmaciaId() == null) {
+        // La farmacia receptora sale del token; se ignora el farmaciaId del pedido (solo SUPERADMIN lo indica)
+        Long farmaciaIdReceptora = acceso.organizacionObligatoria();
+        if (farmaciaIdReceptora == null) {
+            farmaciaIdReceptora = dto.getFarmaciaId();
+        }
+        if (farmaciaIdReceptora == null) {
             throw new IllegalArgumentException("El ID de farmacia es obligatorio.");
         }
-        Organizacion farmacia = organizacionRepo.findById(dto.getFarmaciaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Farmacia no encontrada con ID: " + dto.getFarmaciaId()));
+        final Long farmId = farmaciaIdReceptora;
+        Organizacion farmacia = organizacionRepo.findById(farmId)
+                .orElseThrow(() -> new ResourceNotFoundException("Farmacia no encontrada con ID: " + farmId));
 
         if (farmacia.getTipo() != TipoOrganizacion.FARMACIA) {
-            throw new IllegalArgumentException("La organización indicada con ID " + dto.getFarmaciaId()
+            throw new IllegalArgumentException("La organización indicada con ID " + farmId
                     + " no es de tipo FARMACIA (tipo actual: " + farmacia.getTipo() + ").");
         }
 
@@ -199,7 +236,7 @@ public class RecepcionFarmaciaService {
 
     @Transactional
     public RecepcionFarmacia update(Long id, RecepcionFarmaciaRequestDTO dto) {
-        RecepcionFarmacia existente = getById(id);
+        RecepcionFarmacia existente = getPropia(id);
 
         if (dto.getDespachoLogisticoId() != null && existente.getDespachoLogistico() != null
                 && !dto.getDespachoLogisticoId().equals(existente.getDespachoLogistico().getId())) {
@@ -240,8 +277,8 @@ public class RecepcionFarmaciaService {
 
     @Transactional
     public void delete(Long id) {
-        // Valida existencia
-        getById(id);
+        // Valida existencia y pertenencia
+        getPropia(id);
         throw new IllegalStateException("No está permitido eliminar recepciones de farmacia para preservar la integridad y trazabilidad del despacho.");
     }
 }

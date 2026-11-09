@@ -15,7 +15,6 @@ public class LoteRequestDTO {
     @NotNull(message = "El ID de medicamento es obligatorio")
     private Long medicamentoId;
 
-    @NotNull(message = "El ID de laboratorio es obligatorio")
     private Long laboratorioId;
 
     private Double tempMin;
