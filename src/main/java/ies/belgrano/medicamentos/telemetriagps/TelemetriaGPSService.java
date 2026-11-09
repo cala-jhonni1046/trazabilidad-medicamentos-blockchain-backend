@@ -2,6 +2,7 @@ package ies.belgrano.medicamentos.telemetriagps;
 
 import java.util.List;
 
+import ies.belgrano.medicamentos.security.AccesoOrganizacion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,22 +15,32 @@ public class TelemetriaGPSService {
 
     private final TelemetriaGPSRepository repo;
     private final DespachoLogisticoRepository despachoRepo;
+    private final AccesoOrganizacion acceso;
 
     public TelemetriaGPSService(TelemetriaGPSRepository repo,
-                                DespachoLogisticoRepository despachoRepo) {
+                                DespachoLogisticoRepository despachoRepo,
+                                AccesoOrganizacion acceso) {
         this.repo = repo;
         this.despachoRepo = despachoRepo;
+        this.acceso = acceso;
     }
 
     @Transactional(readOnly = true)
     public List<TelemetriaGPS> getAll(Long despachoLogisticoId) {
+        boolean admin = acceso.esAdminOGlobal();
+        Long orgId = acceso.organizacionActualId();
+        if (!admin && orgId == null) {
+            return List.of();
+        }
         if (despachoLogisticoId != null) {
-            if (!despachoRepo.existsById(despachoLogisticoId)) {
+            boolean existe = admin ? despachoRepo.existsById(despachoLogisticoId)
+                    : despachoRepo.esVisiblePorOrganizacion(despachoLogisticoId, orgId);
+            if (!existe) {
                 throw new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + despachoLogisticoId);
             }
             return repo.findByDespachoLogisticoIdOrderByFechaHoraAscIdAsc(despachoLogisticoId);
         }
-        return repo.findAllByOrderByFechaHoraAscIdAsc();
+        return admin ? repo.findAllByOrderByFechaHoraAscIdAsc() : repo.findVisiblesPorOrganizacion(orgId);
     }
 
     @Transactional(readOnly = true)
@@ -39,14 +50,28 @@ public class TelemetriaGPSService {
 
     @Transactional(readOnly = true)
     public TelemetriaGPS getById(Long id) {
-        return repo.findById(id)
+        TelemetriaGPS lectura = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lectura de telemetría GPS no encontrada con ID: " + id));
+        if (!acceso.esAdminOGlobal()) {
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null || !despachoRepo.esVisiblePorOrganizacion(lectura.getDespachoLogistico().getId(), orgId)) {
+                throw new ResourceNotFoundException("Lectura de telemetría GPS no encontrada con ID: " + id);
+            }
+        }
+        return lectura;
     }
 
     @Transactional
     public TelemetriaGPS create(TelemetriaGPSRequestDTO dto) {
         if (dto.getDespachoLogisticoId() == null) {
             throw new IllegalArgumentException("El ID de despacho logístico es obligatorio.");
+        }
+        if (!acceso.esAdminOGlobal()) {
+            // Solo el laboratorio del lote o el distribuidor cargan telemetría de un despacho
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null || !despachoRepo.esGestionablePorOrganizacion(dto.getDespachoLogisticoId(), orgId)) {
+                throw new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + dto.getDespachoLogisticoId());
+            }
         }
         DespachoLogistico despacho = despachoRepo.findById(dto.getDespachoLogisticoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho logístico no encontrado con ID: " + dto.getDespachoLogisticoId()));

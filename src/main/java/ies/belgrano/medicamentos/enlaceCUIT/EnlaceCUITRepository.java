@@ -19,6 +19,21 @@ public interface EnlaceCUITRepository extends JpaRepository<EnlaceCUIT, Long> {
 
     Optional<EnlaceCUIT> findByLaboratorioIdAndDistribuidorIdAndFarmaciaId(Long laboratorioId, Long distribuidorId, Long farmaciaId);
 
+    /** Enlaces en los que participa la organización (como laboratorio, distribuidor o farmacia). */
+    @Query("""
+            select e from EnlaceCUIT e
+            where (e.laboratorio.id = :orgId or e.distribuidor.id = :orgId or e.farmacia.id = :orgId)
+              and (:estado is null or e.estado = :estado)
+              and (:laboratorioId is null or e.laboratorio.id = :laboratorioId)
+              and (:distribuidorId is null or e.distribuidor.id = :distribuidorId)
+              and (:farmaciaId is null or e.farmacia.id = :farmaciaId)
+            """)
+    List<EnlaceCUIT> findVisiblesPorOrganizacion(@Param("orgId") Long orgId,
+                                                @Param("estado") EstadoEnlaceCuit estado,
+                                                @Param("laboratorioId") Long laboratorioId,
+                                                @Param("distribuidorId") Long distribuidorId,
+                                                @Param("farmaciaId") Long farmaciaId);
+
     @Query("""
             select e from EnlaceCUIT e
             where (:estado is null or e.estado = :estado)

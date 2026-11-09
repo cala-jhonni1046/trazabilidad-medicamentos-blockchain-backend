@@ -1,53 +1,93 @@
-# Trazabilidad de medicamentos — backend académico
+# MediChain — backend de trazabilidad de medicamentos
 
-API REST de un MVP académico para registrar organizaciones, lotes, despachos, telemetría, recepciones, cuarentenas, unidades, dispensaciones y reportes ciudadanos. También expone una consulta informativa por QR. Los hashes de custodia y los registros llamados «blockchain» son demostrativos: no hay conexión con una red distribuida ni certificación de autenticidad sanitaria.
+API REST (Spring Boot 4.1.1, Java 21, MySQL) para que laboratorios, distribuidores y farmacias registren la cadena de custodia de medicamentos, bajo la supervisión de ANMAT. Incluye login con JWT, permisos por rol y aislamiento por organización: cada empresa ve y modifica únicamente sus propios datos.
 
-El contrato completo de rutas, cuerpos, estados y errores está en [docs/api.md](docs/api.md). La evidencia de la revisión B10 y sus diferencias pendientes está en [docs/integracion-b10.md](docs/integracion-b10.md). No hay login, JWT ni autorización; los roles de usuario son datos persistidos, no controles de acceso.
+Los registros llamados «blockchain» y los hashes de custodia siguen siendo demostrativos: no hay conexión con una red distribuida.
+
+## Documentación
+
+- [docs/seguridad.md](docs/seguridad.md): login, token, permisos por rol, aislamiento por organización, errores 401/403/404/429, auditoría y configuración.
+- [docs/api.md](docs/api.md): contrato de rutas, cuerpos, estados y errores de cada módulo.
+- Swagger UI en `http://localhost:8080/swagger-ui/index.html` con la aplicación iniciada.
 
 ## Requisitos
 
-- JDK 21.
-- Maven instalado (`mvn`). El repositorio incluye `mvnw`, pero no incluye `.mvn/wrapper`, por lo que el wrapper no se puede usar tal como está.
-- MySQL accesible desde la máquina donde se inicia la API.
-- Dependencias descargables por Maven en la primera compilación.
+- JDK 21 o superior.
+- MySQL accesible desde la máquina donde corre la API.
+- No hace falta instalar Maven: el repositorio incluye el wrapper (`mvnw` / `mvnw.cmd` y la carpeta `.mvn`).
 
-El proyecto declara Spring Boot 4.1.1 y springdoc OpenAPI 3.1.0 en `pom.xml`. Por defecto Spring Boot escucha en el puerto 8080.
+## Variables de entorno
 
-## Preparar MySQL y la configuración local
+| Variable | Obligatoria | Descripción |
+|---|---|---|
+| `JWT_SECRET` | Sí | Clave de firma de los tokens, de al menos 32 caracteres. Si falta o es corta, la aplicación no arranca. No tiene valor por defecto. |
+| `SPRING_DATASOURCE_URL` | Sí* | URL JDBC, por ejemplo `jdbc:mysql://localhost:3306/medicamentos?createDatabaseIfNotExist=true&serverTimezone=UTC`. |
+| `SPRING_DATASOURCE_USERNAME` | Sí* | Usuario de la base. |
+| `SPRING_DATASOURCE_PASSWORD` | No | Contraseña de la base. Omitir si el usuario no tiene. |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | No | `update` crea o ajusta las tablas al arrancar (solo en bases propias o de prueba); `validate` solo verifica. |
+| `APP_CORS_ALLOWED_ORIGINS` | No | Orígenes permitidos, separados por coma. Por defecto `http://localhost:4200`. En producción, el dominio real del frontend. |
+| `APP_JWT_EXPIRACION_MINUTOS` | No | Duración del token en minutos. Por defecto 60. |
 
-Crear una base descartable propia para el MVP, por ejemplo `medicamentos`. Un administrador de MySQL puede ejecutar:
+\* Si usás un `application.properties` local con tus propias variables (por ejemplo `DB_URL`, `DB_USER`, `DB_PASSWORD`), no lo subas al repositorio: contiene credenciales.
 
-```sql
-CREATE DATABASE IF NOT EXISTS medicamentos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Generar un secreto aleatorio (PowerShell):
+
+```powershell
+-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 48 | ForEach-Object {[char]$_})
 ```
 
-La configuración versionada solo declara `spring.application.name`. Definir la conexión mediante variables de entorno de Spring Boot en la terminal donde se iniciará la aplicación:
+## Levantar el backend
+
+PowerShell (Windows), desde la carpeta del backend. Las variables valen solo para esa ventana:
+
+```powershell
+$env:JWT_SECRET="pegá-acá-tu-clave-de-al-menos-32-caracteres"
+$env:SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/medicamentos?createDatabaseIfNotExist=true&serverTimezone=UTC"
+$env:SPRING_DATASOURCE_USERNAME="root"
+$env:SPRING_JPA_HIBERNATE_DDL_AUTO="update"
+.\mvnw spring-boot:run "-Dspring-boot.run.profiles=demo"
+```
+
+Linux / macOS:
 
 ```bash
-export SPRING_DATASOURCE_URL='jdbc:mysql://localhost:3306/medicamentos'
+export JWT_SECRET='pegá-acá-tu-clave-de-al-menos-32-caracteres'
+export SPRING_DATASOURCE_URL='jdbc:mysql://localhost:3306/medicamentos?createDatabaseIfNotExist=true&serverTimezone=UTC'
 export SPRING_DATASOURCE_USERNAME='usuario_local'
-read -r -s -p 'Contraseña MySQL: ' SPRING_DATASOURCE_PASSWORD; echo
-export SPRING_DATASOURCE_PASSWORD
+export SPRING_DATASOURCE_PASSWORD='contraseña_local'
 export SPRING_JPA_HIBERNATE_DDL_AUTO=update
+./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-`usuario_local` es un marcador: usar una cuenta propia con permisos en esa base. El modo `update` permite que Hibernate cree o ajuste tablas de una **base descartable**; modifica su esquema al arrancar. Para una base existente cuyo esquema ya sea compatible, usar `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` y aplicar previamente las migraciones que correspondan. El repositorio no incluye Flyway, Liquibase ni scripts versionados de creación. En particular, un esquema MySQL anterior a B11 puede necesitar agregar `DESPACHO_CANCELADO` y `RECEPCION_RECHAZADA` al `ENUM` de `eventos_custodia.tipo_evento` antes de usar `validate`.
+El perfil `demo` carga datos ficticios (organizaciones, usuarios, lotes, despachos) y es idempotente: se puede arrancar varias veces. **No lo actives en producción.** Los usuarios de prueba están en [docs/seguridad.md](docs/seguridad.md).
 
-Si se dispone de una configuración local en `src/main/resources/application.properties`, evitar publicar sus credenciales. Las variables de entorno permiten mantenerlas fuera del repositorio.
+Comprobación rápida (debe responder 401 sin token):
 
-## Compilar e iniciar
-
-Desde la carpeta del backend:
-
-```bash
-mvn -DskipTests compile
-mvn spring-boot:run
+```powershell
+curl.exe -i http://localhost:8080/api/lotes
 ```
 
-Las pruebas automatizadas se pospusieron para la etapa final del proyecto; `-DskipTests` compila sin ejecutarlas. El arranque requiere la base configurada y puede modificar su esquema según `SPRING_JPA_HIBERNATE_DDL_AUTO`.
+## Pruebas automáticas
 
-Con la aplicación iniciada, abrir `http://localhost:8080/swagger-ui/index.html` para Swagger UI o `http://localhost:8080/v3/api-docs` para OpenAPI. Una consulta sin escritura para comprobar que responde es `GET http://localhost:8080/api/medicamentos` (devuelve `[]` si no hay registros). Swagger se genera de los controladores: muestra las rutas disponibles, incluidas algunas que responden con rechazo por regla de negocio. Consultar `docs/api.md` para esas restricciones.
+```powershell
+$env:JWT_SECRET="una-clave-de-prueba-de-al-menos-32-caracteres"
+.\mvnw test
+```
 
-## Límites del MVP
+Hay pruebas unitarias de JWT, límite de intentos de login, control de acceso por organización y login. La prueba `MedicamentosApplicationTests` arranca la aplicación completa, así que necesita MySQL accesible con las mismas variables de conexión.
 
-La telemetría se ingresa por API; no hay sensores integrados. La consulta QR no expone DNI, correo, contactos ni coordenadas GPS exactas, pero los endpoints administrativos no están protegidos por autenticación. No se debe usar este backend con datos personales reales ni como sistema sanitario de producción.
+## Antes de publicar en producción
+
+- Servir la API detrás de HTTPS (proxy inverso) y definir `APP_CORS_ALLOWED_ORIGINS` con el dominio real.
+- Usar un `JWT_SECRET` largo y propio, guardado fuera del repositorio.
+- No activar el perfil `demo`.
+- Deshabilitar Swagger si no debe ser público: `springdoc.api-docs.enabled=false` y `springdoc.swagger-ui.enabled=false`.
+- Usar `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` con migraciones controladas; el repositorio todavía no incluye Flyway ni Liquibase.
+- Hacer copias de seguridad de la base de datos.
+
+## Límites actuales
+
+- Los tokens duran 60 minutos y no hay renovación ni revocación anticipada.
+- El límite de intentos de login es en memoria: se reinicia al reiniciar la aplicación y no se comparte entre varias instancias.
+- Los registros «blockchain» no están anclados a una red real.
+- No hay recuperación de contraseña por correo.

@@ -13,7 +13,6 @@ public class DispensacionRequestDTO {
     @Size(max = 16, message = "El DNI del paciente no puede superar los 16 caracteres.")
     private String dniPaciente;
 
-    @NotNull(message = "El ID de farmacia es obligatorio.")
     private Long farmaciaId;
 
     @NotNull(message = "El ID de unidad trazable es obligatorio.")

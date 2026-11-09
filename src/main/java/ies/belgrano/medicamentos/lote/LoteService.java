@@ -14,6 +14,7 @@ import ies.belgrano.medicamentos.medicamento.MedicamentoRepository;
 import ies.belgrano.medicamentos.organizacion.Organizacion;
 import ies.belgrano.medicamentos.organizacion.OrganizacionRepository;
 import ies.belgrano.medicamentos.organizacion.TipoOrganizacion;
+import ies.belgrano.medicamentos.security.AccesoOrganizacion;
 import ies.belgrano.medicamentos.unidadTrazable.EstadoUnidadTrazable;
 import ies.belgrano.medicamentos.unidadTrazable.UnidadTrazable;
 import ies.belgrano.medicamentos.unidadTrazable.UnidadTrazableRepository;
@@ -26,17 +27,20 @@ public class LoteService {
     private final OrganizacionRepository organizacionRepository;
     private final UnidadTrazableRepository unidadTrazableRepository;
     private final DespachoLogisticoRepository despachoLogisticoRepository;
+    private final AccesoOrganizacion acceso;
 
     public LoteService(LoteRepository loteRepository,
                        MedicamentoRepository medicamentoRepository,
                        OrganizacionRepository organizacionRepository,
                        UnidadTrazableRepository unidadTrazableRepository,
-                       DespachoLogisticoRepository despachoLogisticoRepository) {
+                       DespachoLogisticoRepository despachoLogisticoRepository,
+                       AccesoOrganizacion acceso) {
         this.loteRepository = loteRepository;
         this.medicamentoRepository = medicamentoRepository;
         this.organizacionRepository = organizacionRepository;
         this.unidadTrazableRepository = unidadTrazableRepository;
         this.despachoLogisticoRepository = despachoLogisticoRepository;
+        this.acceso = acceso;
     }
 
     @Transactional(readOnly = true)
@@ -52,6 +56,14 @@ public class LoteService {
         if (laboratorioId != null && !organizacionRepository.existsById(laboratorioId)) {
             throw new ResourceNotFoundException("Laboratorio no encontrado con ID: " + laboratorioId);
         }
+        if (!acceso.esAdminOGlobal()) {
+            // Empresas: solo sus lotes y los de los despachos en los que participan
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null) {
+                return List.of();
+            }
+            return loteRepository.findVisiblesPorOrganizacion(orgId, medicamentoId, laboratorioId, estado);
+        }
         if (medicamentoId == null && laboratorioId == null && estado == null) {
             return loteRepository.findAll();
         }
@@ -63,10 +75,26 @@ public class LoteService {
         return getAll(medicamentoId, null, null);
     }
 
+    /** Lectura: el lote debe ser visible para la organización del usuario (404 si no). */
     @Transactional(readOnly = true)
     public Lote getById(Long id) {
-        return loteRepository.findById(id)
+        Lote lote = loteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lote no encontrado con ID: " + id));
+        if (!acceso.esAdminOGlobal()) {
+            Long orgId = acceso.organizacionActualId();
+            if (orgId == null || !loteRepository.esVisiblePorOrganizacion(id, orgId)) {
+                throw new ResourceNotFoundException("Lote no encontrado con ID: " + id);
+            }
+        }
+        return lote;
+    }
+
+    /** Escritura: solo el laboratorio dueño del lote (o SUPERADMIN). 404 si pertenece a otra organización. */
+    private Lote getPropio(Long id) {
+        Lote lote = loteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Lote no encontrado con ID: " + id));
+        acceso.verificarAcceso(lote.getLaboratorio().getId());
+        return lote;
     }
 
     @Transactional
@@ -86,14 +114,20 @@ public class LoteService {
         Medicamento medicamento = medicamentoRepository.findById(dto.getMedicamentoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Medicamento no encontrado con ID: " + dto.getMedicamentoId()));
 
-        if (dto.getLaboratorioId() == null) {
+        // Un laboratorio solo crea lotes a su nombre: se ignora el laboratorioId del pedido.
+        Long laboratorioId = acceso.organizacionObligatoria();
+        if (laboratorioId == null) {
+            laboratorioId = dto.getLaboratorioId(); // SUPERADMIN
+        }
+        if (laboratorioId == null) {
             throw new IllegalArgumentException("El ID de laboratorio es obligatorio.");
         }
-        Organizacion laboratorio = organizacionRepository.findById(dto.getLaboratorioId())
-                .orElseThrow(() -> new ResourceNotFoundException("Laboratorio no encontrado con ID: " + dto.getLaboratorioId()));
+        final Long labId = laboratorioId;
+        Organizacion laboratorio = organizacionRepository.findById(labId)
+                .orElseThrow(() -> new ResourceNotFoundException("Laboratorio no encontrado con ID: " + labId));
 
         if (laboratorio.getTipo() != TipoOrganizacion.LABORATORIO) {
-            throw new IllegalArgumentException("La organización indicada con ID " + dto.getLaboratorioId() + " no es de tipo LABORATORIO.");
+            throw new IllegalArgumentException("La organización indicada con ID " + labId + " no es de tipo LABORATORIO.");
         }
 
         if (dto.getTempMin() != null && dto.getTempMax() != null && dto.getTempMin() > dto.getTempMax()) {
@@ -114,7 +148,7 @@ public class LoteService {
 
     @Transactional
     public Lote update(Long id, LoteRequestDTO dto) {
-        Lote existente = getById(id);
+        Lote existente = getPropio(id);
 
         String nuevoCodigo = dto.getCodigoLote() != null ? dto.getCodigoLote().trim() : null;
         if (nuevoCodigo == null || nuevoCodigo.isBlank()) {
@@ -133,7 +167,9 @@ public class LoteService {
             existente.setMedicamento(medicamento);
         }
 
-        if (dto.getLaboratorioId() != null && !dto.getLaboratorioId().equals(existente.getLaboratorio().getId())) {
+        // Solo SUPERADMIN puede reasignar un lote a otro laboratorio
+        if (acceso.esAdminOGlobal() && dto.getLaboratorioId() != null
+                && !dto.getLaboratorioId().equals(existente.getLaboratorio().getId())) {
             Organizacion laboratorio = organizacionRepository.findById(dto.getLaboratorioId())
                     .orElseThrow(() -> new ResourceNotFoundException("Laboratorio no encontrado con ID: " + dto.getLaboratorioId()));
             if (laboratorio.getTipo() != TipoOrganizacion.LABORATORIO) {
@@ -156,7 +192,7 @@ public class LoteService {
 
     @Transactional
     public void delete(Long id) {
-        Lote existente = getById(id);
+        Lote existente = getPropio(id);
 
         if (unidadTrazableRepository.existsByLoteId(id)) {
             throw new DataIntegrityViolationException(
@@ -183,7 +219,7 @@ public class LoteService {
             throw new IllegalArgumentException("La cantidad debe ser un número entero entre 1 y 1000.");
         }
 
-        Lote lote = getById(id);
+        Lote lote = getPropio(id);
 
         if (lote.getEstado() == EstadoLote.CERRADO || lote.getEstado() == EstadoLote.EN_CUARENTENA) {
             throw new IllegalStateException("No se pueden generar unidades para un lote en estado " + lote.getEstado() + ".");
@@ -241,4 +277,4 @@ public class LoteService {
 
         return new GeneracionUnidadesResponseDTO(lote.getId(), codigoLote, cantidad, primerCodigo, ultimoCodigo);
     }
-}
+}

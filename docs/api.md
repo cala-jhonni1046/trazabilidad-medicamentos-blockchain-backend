@@ -1,16 +1,16 @@
 # Contrato API del backend (B10)
 
-Este documento describe el código de esta rama. Todas las rutas usan JSON y tienen prefijo `/api`. No existe autenticación ni autorización: los IDs de farmacia, inspector u organización declarados por un cliente no prueban su identidad. Swagger UI se genera desde los controladores en `/swagger-ui/index.html`; el esquema OpenAPI está en `/v3/api-docs`. Las rutas de rechazo conservadas por compatibilidad también aparecen allí, aunque no realizan la operación solicitada.
+Este documento describe el código de esta rama. Todas las rutas usan JSON y tienen prefijo `/api`. Todas las rutas, salvo las públicas, requieren `Authorization: Bearer <token>`; login, permisos por rol, aislamiento por organización y errores 401/403/404/429 están en [seguridad.md](seguridad.md). Las tablas de este documento describen las rutas y cuerpos de cada módulo; el filtrado por organización se aplica sobre ellas. Swagger UI se genera desde los controladores en `/swagger-ui/index.html`; el esquema OpenAPI está en `/v3/api-docs`. Las rutas de rechazo conservadas por compatibilidad también aparecen allí, aunque no realizan la operación solicitada.
 
 ## Estado de implementación
 
 | Área | Estado | Alcance real |
 |---|---|---|
-| Organizaciones, medicamentos, usuarios, inspectores, lotes y enlaces CUIT | Implementado | CRUD y reglas locales indicadas abajo. `Usuario` administra datos y roles; no inicia sesión. |
+| Organizaciones, medicamentos, usuarios, inspectores, lotes y enlaces CUIT | Implementado | CRUD y reglas locales indicadas abajo. `Usuario` se administra con `SUPERADMIN`; el inicio de sesión es `POST /api/auth/login`. |
 | Despachos, eventos de custodia, telemetría y recepciones | Implementado con límites | Telemetría ingresada mediante API; hashes locales demostrativos. La recepción B06 cierra la entrega. |
-| Cuarentenas, unidades, dispensaciones, reportes y consulta QR | Implementado con límites | No hay verificación regulatoria, receta clínica ni autenticación del actor. Generación de unidades por lote implementada en `/api/lotes/{id}/unidades`. |
+| Cuarentenas, unidades, dispensaciones, reportes y consulta QR | Implementado con límites | No hay verificación regulatoria ni receta clínica. Generación de unidades por lote implementada en `/api/lotes/{id}/unidades`. |
 | `/registros-blockchain` | Parcial / demostrativo | CRUD de metadatos declarados con Bean Validation; no envía transacciones a una red blockchain ni verifica firmas. |
-| Resolución de recepción `OBSERVADA`, bloqueo explícito de unidad, autenticación y blockchain distribuida | Pendiente / fuera del MVP | No existe endpoint que complete estas capacidades. |
+| Resolución de recepción `OBSERVADA`, bloqueo explícito de unidad y blockchain distribuida | Pendiente / fuera del MVP | No existe endpoint que complete estas capacidades. |
 
 ## Convenciones de rutas, cuerpos y estados HTTP
 
@@ -49,7 +49,7 @@ Los siguientes cuerpos contienen los campos mínimos o habituales aceptados por 
 |---|---|---|
 | Organizaciones | `{"cuit":"30123456789","nombre":"Laboratorio Ejemplo","tipo":"LABORATORIO"}` | `OrganizacionResponseDTO`: `id`, `cuit`, `nombre`, `tipo`, fechas. |
 | Medicamentos | `{"nombre":"Producto ejemplo","principioActivo":"Sustancia ejemplo","requiereCadenaFrio":false}` | `MedicamentoResponseDTO`: `id`, esos campos, fechas. |
-| Usuarios | `{"email":"usuario@example.invalid","rol":"LABORATORIO"}` | `UsuarioResponseDTO`: `id`, `email`, `rol`, `activo`, fechas. No hay contraseña ni token. |
+| Usuarios | `{"email":"usuario@example.invalid","rol":"LABORATORIO","password":"ClaveSegura1","organizacionId":1}` | `UsuarioResponseDTO`: `id`, `email`, `rol`, `activo`, fechas. La contraseña (mínimo 8 caracteres, guardada con BCrypt) nunca se devuelve; `organizacionId` es obligatorio para los roles de empresa. |
 | Inspectores | `{"usuarioId":1,"nombreCompleto":"Inspector de ejemplo"}` | `InspectorANMATResponseDTO`: `id`, `usuarioId`, `usuarioEmail`, `usuarioRol`, `nombreCompleto`, `estado`, otros campos internos de inspector y fechas. |
 | Lotes | `{"codigoLote":"LOTE-001","medicamentoId":1,"laboratorioId":1}` | `LoteResponseDTO`: `id`, `codigoLote`, IDs/nombres relacionados, `tempMin`, `tempMax`, `fechaHoraFabricacion`, `estado`, fechas. |
 | Enlaces CUIT | `{"laboratorioId":1,"distribuidorId":2,"farmaciaId":3}` | `EnlaceCUITResponseDTO`: `id`, IDs/nombres/CUIT de las tres organizaciones, `estado`, inspector y datos de aprobación, fechas. |
@@ -104,13 +104,13 @@ Todas las respuestas de error siguen el formato estandarizado H0:
 - `INVALID_ARGUMENT` (405): método HTTP no permitido para la ruta invocada (`HttpRequestMethodNotSupportedException`). Se seleccionó el código existente más representativo del contrato.
 - `INTERNAL_ERROR` (500): excepciones genéricas imprevistas como último recurso, sin exponer trazas de pila ni datos sensibles.
 
-`UNAUTHORIZED` y `FORBIDDEN` existen en el enum compartido, pero no hay autenticación ni rutas que los emitan como política de acceso. La respuesta pública no incluye DNI, correo, contactos ni GPS exacto; los módulos internos sí pueden devolver datos según su DTO y carecen de control de acceso en este MVP.
+Los errores de autenticación y permisos (`NO_AUTENTICADO` 401, `ACCESO_DENEGADO` 403, `CREDENCIALES_INVALIDAS` 401/429) se describen en [seguridad.md](seguridad.md). Un recurso de otra organización responde `404 RESOURCE_NOT_FOUND`. La respuesta pública no incluye DNI, correo, contactos ni GPS exacto; los módulos internos devuelven datos según su DTO, acotados por rol y organización.
 
 ## Discrepancias y pendientes técnicos
 
-- **Autenticación y autorización**: los endpoints administrativos no cuentan con login, token JWT ni restricción por roles de acceso; cualquier cliente puede invocar cualquier ruta. Los roles persistidos son solo valores informativos (`SUPERADMIN`, `ANMAT`, `LABORATORIO`, `DISTRIBUIDOR`, `FARMACIA`, `PACIENTE`).
-- **Visibilidad del DNI de inspectores**: el endpoint `GET /api/inspectores` y los DTO de inspectores incluyen el DNI oficial con fines de auditoría demostrativa. Al no contar con autenticación, este dato es visible para cualquier cliente del MVP (limitación conocida).
-- **Vínculo permanente Usuario ↔ Organización**: no se encuentra implementado en el backend; el frontend resuelve la asignación de identidad mediante sesión simulada.
+- **Autenticación y autorización**: implementadas con JWT, permisos por rol y aislamiento por organización (ver [seguridad.md](seguridad.md)). Pendientes: renovación y revocación de tokens, y recuperación de contraseña.
+- **Visibilidad del DNI de inspectores**: el endpoint `GET /api/inspectores` y los DTO de inspectores incluyen el DNI oficial con fines de auditoría demostrativa. Solo `SUPERADMIN` y `ANMAT` pueden consultarlo.
+- **Vínculo Usuario ↔ Organización**: el usuario de empresa tiene `organizacionId`, que viaja en el token y determina qué datos ve y a nombre de quién escribe.
 - **Cuarentena automática por excursión**: ante lecturas de temperatura fuera de rango en telemetría, se registra `alertaExcursion=true`, pero el paso a `EN_CUARENTENA` permanece como operación manual.
 - **Campos de auditoría de rechazo en Enlace CUIT**: no se persiste qué inspector ni en qué fecha exacta se produjo un rechazo de enlace.
 - **Vínculo de RegistroBlockchain con lote/evento**: el módulo funciona como un CRUD de metadatos declarados de demostración con Bean Validation; no implementa vinculación criptográfica obligatoria con el lote ni conexión a una red blockchain distribuida.
@@ -395,11 +395,9 @@ Para errores de validación (`400`), `fieldErrors` contiene la lista:
 
 ---
 
-## 5. Identificación de farmacia (sin autenticación)
+## 5. Identificación de la farmacia
 
-El MVP académico **no tiene autenticación ni autorización**. El `farmaciaId` en el request de dispensación es un ID declarado por el cliente. No existe verificación de que el llamante sea realmente esa farmacia.
-
-Esto es una **limitación aceptada** del alcance académico. En un sistema productivo, la identidad de la farmacia se obtendría del token de sesión/JWT.
+El `farmaciaId` de una dispensación **sale del token** del usuario FARMACIA; si el cuerpo trae otro valor, se ignora. La unidad debe ser visible para esa farmacia (llegó a través de un despacho a su nombre); de lo contrario responde `404`. Las dispensaciones solo las ve la farmacia que dispensó, y `SUPERADMIN` y `ANMAT` para control.
 
 ---
 
@@ -711,7 +709,7 @@ En estricto cumplimiento del principio de privacidad por diseño y minimización
 
 - `POST /api/despachos-logisticos` deriva la farmacia destino del `EnlaceCUIT` activo; el enlace debe tener una organización de tipo `FARMACIA`. Si el request envía `farmaciaDestinoId`, debe coincidir. `destino` es una descripción logística y no reemplaza la relación con la farmacia. El lote y distribuidor deben corresponder al mismo enlace.
 - `POST /api/despachos-logisticos/{id}/entregar` y `/recibir` rechazan el cierre directo con `409 STATE_CONFLICT`. La única operación que marca un despacho como `RECIBIDO` es `POST /api/recepciones-farmacia` con resultado `CONFORME` u `OBSERVADA`; guarda la recepción, el evento y los cambios de estado en la misma transacción. Una recepción `RECHAZADA` cancela el despacho y registra un evento `RECEPCION_RECHAZADA` sin marcar el lote como recibido.
-- `POST /api/despachos-logisticos/{id}/cancelar` registra un evento `DESPACHO_CANCELADO` en la misma transacción. La organización del evento es la asociada al flujo, sin representar una identidad autenticada.
+- `POST /api/despachos-logisticos/{id}/cancelar` registra un evento `DESPACHO_CANCELADO` en la misma transacción. Para usuarios de empresa, la organización del evento es la del usuario autenticado.
 - En una base MySQL ya creada, el `ENUM` de `eventos_custodia.tipo_evento` debe incorporar `DESPACHO_CANCELADO` y `RECEPCION_RECHAZADA`. La configuración local `ddl-auto=update` sincroniza el esquema; una instalación que use `validate` necesita esa migración previamente.
 - Los filtros `loteId`, `distribuidorId` y `estado` de `GET /api/despachos-logisticos` se aplican conjuntamente con lógica AND.
 - `PUT /api/cuarentenas/{id}` rechaza cambios a cuarentenas `LIBERADA` o `MANTENIDA`; no altera registros ya resueltos.
@@ -775,4 +773,4 @@ Todos los datos utilizados son estrictamente ficticios, sin vinculación con ent
    - Enlace CUIT en estado `PENDIENTE` entre el laboratorio secundario, el distribuidor sembrado y la farmacia secundaria, sin inspector asignado ni fecha de aprobación.
    - Permite al usuario demostrar la aprobación o rechazo en vivo desde la pantalla de auditoría ANMAT.
 
-> **Aclaración de seguridad y roles**: El backend académico no implementa autenticación ni autorización. El rol `SUPERADMIN` es únicamente un valor dentro del enum `RolUsuario` persistido en la base de datos; no provee credenciales, permisos elevados ni control de acceso al API. De la misma forma, el DNI del inspector es un dato administrativo visible públicamente en las respuestas JSON para soporte de la pantalla de auditoría.
+> **Acceso al sistema de demostración**: todos los usuarios sembrados usan la contraseña `Demo1234!` e inician sesión con `POST /api/auth/login`. Además de los listados arriba, el perfil siembra `laboratorio2@medichain.demo` (Laboratorio Innovación Demo) y `farmacia2@medichain.demo` (Farmacia Sanitaria Demo) para poder comprobar el aislamiento entre organizaciones. Ver [seguridad.md](seguridad.md). El DNI del inspector es un dato administrativo visible solo para `SUPERADMIN` y `ANMAT`.

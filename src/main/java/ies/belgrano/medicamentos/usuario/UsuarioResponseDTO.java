@@ -8,6 +8,7 @@ public class UsuarioResponseDTO {
     private String email;
     private RolUsuario rol;
     private Boolean activo;
+    private Long organizacionId;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
 
@@ -16,10 +17,16 @@ public class UsuarioResponseDTO {
 
     public UsuarioResponseDTO(Long id, String email, RolUsuario rol, Boolean activo,
                               LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
+        this(id, email, rol, activo, null, fechaCreacion, fechaActualizacion);
+    }
+
+    public UsuarioResponseDTO(Long id, String email, RolUsuario rol, Boolean activo, Long organizacionId,
+                              LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
         this.id = id;
         this.email = email;
         this.rol = rol;
         this.activo = activo;
+        this.organizacionId = organizacionId;
         this.fechaCreacion = fechaCreacion;
         this.fechaActualizacion = fechaActualizacion;
     }
@@ -54,6 +61,14 @@ public class UsuarioResponseDTO {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+
+    public Long getOrganizacionId() {
+        return organizacionId;
+    }
+
+    public void setOrganizacionId(Long organizacionId) {
+        this.organizacionId = organizacionId;
     }
 
     public LocalDateTime getFechaCreacion() {
